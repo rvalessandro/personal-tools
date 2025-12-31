@@ -1,4 +1,4 @@
-.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart calendar-sync calendar-clean sync-config
+.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart calendar-sync calendar-clean pull-cc-configs push-cc-configs
 
 help:
 	@echo "Usage: make <target>"
@@ -15,8 +15,9 @@ help:
 	@echo "  calendar-sync   Run calendar sync"
 	@echo "  calendar-clean  Clean synced events"
 	@echo ""
-	@echo "Config:"
-	@echo "  sync-config  Sync Claude commands & MCPs from repo to ~/.claude"
+	@echo "Claude Config:"
+	@echo "  pull-cc-configs  Pull ~/.claude configs into repo (for committing)"
+	@echo "  push-cc-configs  Apply repo configs to ~/.claude (on server)"
 
 # Telegram Bot
 bot-build:
@@ -44,6 +45,9 @@ calendar-sync:
 calendar-clean:
 	docker compose run --rm calendar-sync clean
 
-# Config Sync
-sync-config:
-	./claude-config/sync-to-server.sh
+# Claude Config
+pull-cc-configs:
+	./claude-config/pull.sh
+
+push-cc-configs:
+	./claude-config/push.sh
