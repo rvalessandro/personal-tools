@@ -33,7 +33,11 @@ export async function askClaude(
 
   return new Promise((resolve) => {
     // Build args array (no shell)
-    const args = ["-p", prompt, "--output-format", "json"];
+    const args = [
+      "-p", prompt,
+      "--output-format", "json",
+      "--dangerously-skip-permissions",
+    ];
     if (sessionId) {
       args.push("--resume", sessionId);
     }
