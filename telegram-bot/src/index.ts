@@ -1,6 +1,11 @@
+import { config } from "dotenv";
+import { resolve } from "path";
 import { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
 import { askClaude, clearSession } from "./claude.js";
+
+// Load .env from parent directory
+config({ path: resolve(import.meta.dirname, "../../.env") });
 
 // Config from environment
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
