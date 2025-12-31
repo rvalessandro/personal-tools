@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { spawn } from "child_process";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -32,13 +32,13 @@ export async function askClaude(
   console.log(`[Claude] Working dir: ${workingDir}`);
 
   return new Promise((resolve) => {
-    // Build command with absolute path
-    const escapedPrompt = prompt.replace(/'/g, "'\\''");
-    const cmd = sessionId
-      ? `'${CLAUDE_PATH}' -p '${escapedPrompt}' --output-format json --resume '${sessionId}'`
-      : `'${CLAUDE_PATH}' -p '${escapedPrompt}' --output-format json`;
+    // Build args array (no shell)
+    const args = ["-p", prompt, "--output-format", "json"];
+    if (sessionId) {
+      args.push("--resume", sessionId);
+    }
 
-    console.log(`[Claude] Command: ${cmd.substring(0, 100)}...`);
+    console.log(`[Claude] Spawning: ${CLAUDE_PATH} with args:`, args.slice(0, 3));
 
     const env = {
       ...process.env,
@@ -46,20 +46,37 @@ export async function askClaude(
       PATH: `${join(homedir(), ".local/bin")}:${process.env.PATH}`,
     };
 
-    exec(cmd, { cwd: workingDir, maxBuffer: 10 * 1024 * 1024, timeout: 20000, env }, (error, stdout, stderr) => {
-      console.log(`[Claude] Completed. stdout length: ${stdout?.length || 0}, stderr length: ${stderr?.length || 0}`);
-      console.log(`[Claude] stdout: ${stdout?.substring(0, 200) || "(empty)"}`);
-      console.log(`[Claude] stderr: ${stderr?.substring(0, 200) || "(empty)"}`);
-      if (error) {
-        console.log(`[Claude] error code: ${error.code}`);
-        console.log(`[Claude] error signal: ${error.signal}`);
-        console.log(`[Claude] error message: ${error.message}`);
-      }
+    const child = spawn(CLAUDE_PATH, args, {
+      cwd: workingDir,
+      env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
 
-      if (error) {
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    const timeout = setTimeout(() => {
+      console.log(`[Claude] Timeout - killing`);
+      child.kill("SIGTERM");
+    }, 60000);
+
+    child.on("close", (code) => {
+      clearTimeout(timeout);
+      console.log(`[Claude] Exit code: ${code}, stdout: ${stdout.length}, stderr: ${stderr.length}`);
+      if (stderr) console.log(`[Claude] stderr: ${stderr.substring(0, 200)}`);
+
+      if (code !== 0) {
         resolve({
-          response: `Error: ${error.message}`,
-          error: error.message,
+          response: `Error: Claude exited with code ${code}. ${stderr}`,
+          error: stderr,
         });
         return;
       }
@@ -72,7 +89,7 @@ export async function askClaude(
           sessions.set(userId, newSessionId);
         }
 
-        console.log(`[Claude] Response length: ${(parsed.result || "").length}`);
+        console.log(`[Claude] Response: ${(parsed.result || "").substring(0, 100)}...`);
 
         resolve({
           response: parsed.result || stdout,
@@ -82,6 +99,15 @@ export async function askClaude(
         console.log(`[Claude] Non-JSON: ${stdout.substring(0, 100)}`);
         resolve({ response: stdout || "No response from Claude" });
       }
+    });
+
+    child.on("error", (err) => {
+      clearTimeout(timeout);
+      console.log(`[Claude] Spawn error: ${err.message}`);
+      resolve({
+        response: `Failed to start Claude: ${err.message}`,
+        error: err.message,
+      });
     });
   });
 }
