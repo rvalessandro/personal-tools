@@ -1,4 +1,6 @@
 import { spawn } from "child_process";
+import { homedir } from "os";
+import { join } from "path";
 
 interface ClaudeResult {
   response: string;
@@ -8,6 +10,9 @@ interface ClaudeResult {
 
 // In-memory session store (per Telegram user)
 const sessions = new Map<number, string>();
+
+// Find claude binary - check nvm path first
+const NVM_BIN = join(homedir(), ".nvm/versions/node", process.version, "bin");
 
 export async function askClaude(
   userId: number,
@@ -23,10 +28,16 @@ export async function askClaude(
     args.push("--resume", sessionId);
   }
 
+  console.log(`[Claude] Calling with args:`, args.slice(0, 3));
+  console.log(`[Claude] Working dir: ${workingDir}`);
+
   return new Promise((resolve) => {
     const claude = spawn("claude", args, {
       cwd: workingDir,
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        PATH: `${NVM_BIN}:${process.env.PATH}`,
+      },
     });
 
     let stdout = "";
@@ -41,6 +52,10 @@ export async function askClaude(
     });
 
     claude.on("close", (code) => {
+      console.log(`[Claude] Exit code: ${code}`);
+      console.log(`[Claude] stdout length: ${stdout.length}`);
+      if (stderr) console.log(`[Claude] stderr: ${stderr}`);
+
       if (code !== 0) {
         resolve({
           response: `Error: ${stderr || "Claude exited with code " + code}`,
@@ -59,12 +74,15 @@ export async function askClaude(
           sessions.set(userId, newSessionId);
         }
 
+        console.log(`[Claude] Response length: ${(parsed.result || "").length}`);
+
         resolve({
           response: parsed.result || stdout,
           sessionId: newSessionId,
         });
       } catch {
         // If not JSON, return raw output
+        console.log(`[Claude] Non-JSON response: ${stdout.substring(0, 100)}`);
         resolve({ response: stdout });
       }
     });
