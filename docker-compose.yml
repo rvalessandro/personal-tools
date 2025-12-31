@@ -1,0 +1,25 @@
+services:
+  telegram-bot:
+    build: ./telegram-bot
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - ALLOWED_USER_IDS=${ALLOWED_USER_IDS}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - WORKING_DIRECTORY=/workspace
+    volumes:
+      # Mount your project for Claude to access
+      - ${WORKSPACE_PATH:-./}:/workspace:ro
+      # Claude CLI config (optional - for MCP servers)
+      - ${CLAUDE_CONFIG_PATH:-~/.claude}:/root/.claude:ro
+
+  calendar-sync:
+    build: ./calendar-sync
+    restart: "no"
+    environment:
+      - CALENDARSYNC_ENCRYPTION_KEY=${CALENDARSYNC_ENCRYPTION_KEY}
+    volumes:
+      - ./calendar-sync/config:/app/config:ro
+      - ./calendar-sync/data:/app/data
+    profiles:
+      - calendar

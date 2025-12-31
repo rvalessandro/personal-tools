@@ -12,11 +12,11 @@ RUN ARCH=$([ "$TARGETARCH" = "arm64" ] && echo "arm64" || echo "amd64") && \
     mv /usr/local/bin/CalendarSync /usr/local/bin/calendarsync && \
     chmod +x /usr/local/bin/calendarsync
 
-RUN adduser -D -u 1000 calendarsync
-USER calendarsync
 WORKDIR /app
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 VOLUME ["/app/config", "/app/data"]
 
-ENTRYPOINT ["/usr/local/bin/calendarsync"]
-CMD ["--config", "/app/config/systeric-to-laku6.yaml"]
+ENTRYPOINT ["/entrypoint.sh"]
