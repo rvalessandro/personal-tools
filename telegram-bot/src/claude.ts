@@ -11,8 +11,8 @@ interface ClaudeResult {
 // In-memory session store (per Telegram user)
 const sessions = new Map<number, string>();
 
-// Find claude binary - check nvm path first
-const NVM_BIN = join(homedir(), ".nvm/versions/node", process.version, "bin");
+// Claude binary path
+const CLAUDE_PATH = process.env.CLAUDE_PATH || join(homedir(), ".local/bin/claude");
 
 export async function askClaude(
   userId: number,
@@ -32,19 +32,17 @@ export async function askClaude(
   console.log(`[Claude] Working dir: ${workingDir}`);
 
   return new Promise((resolve) => {
-    // Build command string for shell execution
+    // Build command with absolute path
     const escapedPrompt = prompt.replace(/'/g, "'\\''");
     const cmd = sessionId
-      ? `claude -p '${escapedPrompt}' --output-format json --resume '${sessionId}'`
-      : `claude -p '${escapedPrompt}' --output-format json`;
+      ? `'${CLAUDE_PATH}' -p '${escapedPrompt}' --output-format json --resume '${sessionId}'`
+      : `'${CLAUDE_PATH}' -p '${escapedPrompt}' --output-format json`;
+
+    console.log(`[Claude] Command: ${cmd.substring(0, 100)}...`);
 
     const claude = spawn(cmd, [], {
       cwd: workingDir,
       shell: true,
-      env: {
-        ...process.env,
-        PATH: `${NVM_BIN}:${process.env.PATH}`,
-      },
     });
 
     let stdout = "";
