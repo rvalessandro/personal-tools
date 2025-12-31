@@ -34,6 +34,7 @@ export async function askClaude(
   return new Promise((resolve) => {
     const claude = spawn("claude", args, {
       cwd: workingDir,
+      shell: true,
       env: {
         ...process.env,
         PATH: `${NVM_BIN}:${process.env.PATH}`,
@@ -42,16 +43,36 @@ export async function askClaude(
 
     let stdout = "";
     let stderr = "";
+    let resolved = false;
+
+    // Timeout after 120 seconds
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        console.log(`[Claude] Timeout - killing process`);
+        claude.kill();
+        resolve({
+          response: "Claude timed out after 120 seconds",
+          error: "timeout",
+        });
+      }
+    }, 120000);
 
     claude.stdout.on("data", (data) => {
       stdout += data.toString();
+      console.log(`[Claude] stdout chunk: ${data.toString().substring(0, 100)}`);
     });
 
     claude.stderr.on("data", (data) => {
       stderr += data.toString();
+      console.log(`[Claude] stderr chunk: ${data.toString().substring(0, 100)}`);
     });
 
     claude.on("close", (code) => {
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(timeout);
+
       console.log(`[Claude] Exit code: ${code}`);
       console.log(`[Claude] stdout length: ${stdout.length}`);
       if (stderr) console.log(`[Claude] stderr: ${stderr}`);
@@ -88,6 +109,10 @@ export async function askClaude(
     });
 
     claude.on("error", (err) => {
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(timeout);
+      console.log(`[Claude] Spawn error: ${err.message}`);
       resolve({
         response: `Failed to start Claude: ${err.message}`,
         error: err.message,
