@@ -36,9 +36,12 @@ if [ -f "$SCRIPT_DIR/mcpServers.json" ]; then
     # Get working directory from .env or use home
     WORK_DIR="${WORKING_DIRECTORY:-$HOME}"
 
+    # Substitute environment variables in mcpServers.json
+    MCP_CONFIG=$(envsubst < "$SCRIPT_DIR/mcpServers.json")
+
     # Sync to both WORKING_DIRECTORY and HOME for global access
     TMP_FILE=$(mktemp)
-    jq --argjson mcps "$(cat "$SCRIPT_DIR/mcpServers.json")" \
+    jq --argjson mcps "$MCP_CONFIG" \
        --arg project "$WORK_DIR" \
        --arg home "$HOME" \
        '.projects[$project].mcpServers = $mcps | .projects[$home].mcpServers = $mcps' \
