@@ -1,0 +1,15 @@
+{
+  "linear-server": {
+    "type": "sse",
+    "url": "https://mcp.linear.app/sse"
+  },
+  "metabase-mcp": {
+    "command": "npx",
+    "args": ["-y", "@jerichosequitin/metabase-mcp"],
+    "env": {
+      "METABASE_URL": "${METABASE_URL}",
+      "METABASE_API_KEY": "${METABASE_API_KEY}",
+      "METABASE_READ_ONLY_MODE": "true"
+    }
+  }
+}
