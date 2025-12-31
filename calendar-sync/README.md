@@ -1,31 +1,26 @@
 # Calendar Cross-Blocking
 
-Dockerized setup for [CalendarSync](https://github.com/inovex/CalendarSync) to create cross-blocking between Google Calendars. When you have an event on Calendar A, a "busy" blocker event is created on Calendar B (and vice versa).
+Dockerized setup for [CalendarSync](https://github.com/inovex/CalendarSync) to create cross-blocking between Google Calendars. When you have an event on one calendar, a "busy" blocker event is created on the other calendar.
 
 Similar to [Reclaim.ai](https://reclaim.ai/features/calendar-sync) calendar sync, but self-hosted.
 
 ## How It Works
 
 ```
-Calendar A                     Calendar B
-┌─────────────────┐           ┌─────────────────┐
-│ Meeting 10-11am │ ────────► │ Busy (synced)   │
-│                 │           │ 10-11am         │
-└─────────────────┘           └─────────────────┘
-
-┌─────────────────┐           ┌─────────────────┐
-│ Busy (synced)   │ ◄──────── │ Doctor 2-3pm    │
-│ 2-3pm           │           │                 │
-└─────────────────┘           └─────────────────┘
+Systeric Calendar                Laku6 Calendar
+┌─────────────────┐             ┌─────────────────┐
+│ Meeting 10-11am │ ──────────► │ Busy (Synced)   │
+│                 │             │ 10-11am         │
+└─────────────────┘             └─────────────────┘
 ```
 
-CalendarSync runs periodically, syncing events from each calendar to the other as "busy" blocker events.
+CalendarSync runs periodically, syncing events from Systeric to Laku6 as "busy" blocker events.
 
 ## Prerequisites
 
-- Docker and Docker Compose
+- Docker and Docker Compose (for server deployment)
 - Google Cloud project with Calendar API enabled
-- Two Google Calendar accounts (or calendars) you want to sync
+- Google OAuth credentials (**Desktop app** type)
 
 ## Setup
 
@@ -35,16 +30,16 @@ CalendarSync runs periodically, syncing events from each calendar to the other a
 
 2. Create a new project (or select existing)
 
-3. Enable the Google Calendar API:
+3. **Enable the Google Calendar API**:
    - Navigate to **APIs & Services > Library**
    - Search for "Google Calendar API"
    - Click **Enable**
 
-4. Configure OAuth consent screen:
+4. **Configure OAuth consent screen**:
    - Go to **APIs & Services > OAuth consent screen**
    - Choose **External** (or Internal if using Google Workspace)
    - Fill in required fields:
-     - App name: `CalendarSync` (or any name)
+     - App name: `CalendarSync`
      - User support email: your email
      - Developer contact: your email
    - Click **Save and Continue**
@@ -52,106 +47,109 @@ CalendarSync runs periodically, syncing events from each calendar to the other a
    - Add: `https://www.googleapis.com/auth/calendar`
    - Save and continue through remaining steps
 
-5. Create OAuth credentials:
+5. **Add test users** (required while app is in testing mode):
+   - Go to **OAuth consent screen > Test users**
+   - Add all Google accounts you'll sync (e.g., `andro@systeric.com`, `andro@laku6.com`)
+
+6. **Create OAuth credentials**:
    - Go to **APIs & Services > Credentials**
    - Click **Create Credentials > OAuth client ID**
-   - Application type: **Desktop app**
+   - **IMPORTANT: Application type: Desktop app** (NOT Web application)
    - Name: `CalendarSync`
    - Click **Create**
-   - **Save the Client ID and Client Secret** - you'll need these
+   - **Save the Client ID and Client Secret**
 
-6. Add test users (if consent screen is in testing mode):
-   - Go to **OAuth consent screen > Test users**
-   - Add the email addresses of all Google accounts you'll sync
+   > **Why Desktop app?** CalendarSync uses a dynamic localhost port for OAuth callback. Desktop app credentials allow any localhost port, while Web application credentials require a specific redirect URI.
 
-### 2. Find Your Calendar IDs
-
-For each calendar you want to sync:
-
-1. Open [Google Calendar](https://calendar.google.com/)
-2. Click the three dots next to the calendar name
-3. Click **Settings and sharing**
-4. Scroll to **Integrate calendar**
-5. Copy the **Calendar ID**
-   - For primary calendars, this is usually your email address
-   - For secondary calendars, it's a long string like `abc123@group.calendar.google.com`
-
-### 3. Configure CalendarSync
+### 2. Configure CalendarSync
 
 ```bash
-# Clone and enter the directory
 cd calendar-sync
 
-# Run setup script
+# Run setup script (creates .env and config files)
 ./scripts/setup.sh
 
-# Edit the config files with your credentials
-nano config/sync-a-to-b.yaml
-nano config/sync-b-to-a.yaml
+# Edit config with your credentials
+nano config/systeric-to-laku6.yaml
 ```
 
-In each config file, replace:
-- `YOUR_CLIENT_ID.apps.googleusercontent.com` with your OAuth Client ID
-- `YOUR_CLIENT_SECRET` with your OAuth Client Secret
-- Calendar IDs with your actual calendar IDs
+Update the config with your OAuth credentials:
+```yaml
+source:
+  adapter:
+    type: google
+    calendar: "andro@systeric.com"
+    oAuth:
+      clientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      clientKey: "YOUR_CLIENT_SECRET"
 
-### 4. Build and Authenticate
+sink:
+  adapter:
+    type: google
+    calendar: "andro@laku6.com"
+    oAuth:
+      clientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      clientKey: "YOUR_CLIENT_SECRET"
+```
+
+### 3. Run Locally (macOS/Linux)
 
 ```bash
-# Build the Docker image
-docker compose build
+# Download binary (macOS ARM)
+curl -sL https://github.com/inovex/CalendarSync/releases/download/v0.10.1/CalendarSync_0.10.1_darwin_arm64.tar.gz | tar xz
+mv CalendarSync calendarsync
 
-# Authenticate for sync-a-to-b config
-# This will print a URL - open it in your browser
-docker compose run --rm auth
-
-# If you have a second config, authenticate it too:
-# Edit docker-compose.yml to point 'auth' service to sync-b-to-a.yaml, then run again
+# Run (first time will open browser for OAuth)
+CALENDARSYNC_ENCRYPTION_KEY=$(grep CALENDARSYNC_ENCRYPTION_KEY .env | cut -d= -f2) ./calendarsync --config config/systeric-to-laku6.yaml
 ```
 
 **Authentication flow:**
-1. CalendarSync prints a URL
-2. Open the URL in your browser
-3. Sign in with the Google account that owns the calendar
-4. Grant calendar access
-5. You'll be redirected to `localhost` - copy the URL
-6. Paste the URL back in the terminal
-7. Repeat for each unique Google account in your configs
+1. CalendarSync opens your browser
+2. Sign in with the Google account that owns the source calendar
+3. Grant calendar access
+4. Sign in again for the sink calendar (if different account)
+5. Tokens are saved encrypted in `data/auth-storage.yaml`
 
-### 5. Test the Sync
+### 4. Run with Docker
 
 ```bash
-# Run a single sync
-docker compose run --rm sync-all
+# Build
+docker compose build
+
+# Authenticate (interactive)
+docker compose run --rm auth
+
+# Run sync
+docker compose run --rm sync
+
+# Clean synced events
+docker compose run --rm clean
 ```
 
-Check your calendars - you should see "Busy (synced from Calendar X)" events.
+### 5. Schedule Regular Syncs
 
-### 6. Schedule Regular Syncs
-
-#### Option A: Cron (simplest)
+#### Cron (simplest)
 
 ```bash
-# Edit crontab
 crontab -e
 
-# Add this line to sync every 15 minutes
-*/15 * * * * cd /path/to/calendar-sync && docker compose run --rm sync-all >> /var/log/calendarsync.log 2>&1
+# Add: sync every 15 minutes
+*/15 * * * * cd /path/to/calendar-sync && CALENDARSYNC_ENCRYPTION_KEY=your-key ./calendarsync --config config/systeric-to-laku6.yaml >> /var/log/calendarsync.log 2>&1
 ```
 
-#### Option B: Systemd Timer (Linux servers)
+#### Systemd Timer (Linux servers)
 
 Create `/etc/systemd/system/calendarsync.service`:
 ```ini
 [Unit]
 Description=CalendarSync
-After=docker.service
-Requires=docker.service
+After=network-online.target
 
 [Service]
 Type=oneshot
 WorkingDirectory=/path/to/calendar-sync
-ExecStart=/usr/bin/docker compose run --rm sync-all
+Environment=CALENDARSYNC_ENCRYPTION_KEY=your-key
+ExecStart=/path/to/calendar-sync/calendarsync --config config/systeric-to-laku6.yaml
 ```
 
 Create `/etc/systemd/system/calendarsync.timer`:
@@ -172,111 +170,91 @@ Enable:
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now calendarsync.timer
-
-# Check status
-systemctl list-timers | grep calendarsync
 ```
 
 ## Configuration Reference
 
 ### Sync Window
 
+Only `MonthStart` and `MonthEnd` are supported:
+
 ```yaml
 sync:
   start:
-    identifier: MonthStart  # or: Now, MonthEnd, YearStart, YearEnd
-    offset: 0               # months offset
+    identifier: MonthStart
+    offset: 0           # current month
   end:
     identifier: MonthEnd
-    offset: +1              # sync current + next month
+    offset: 0           # end of current month
 ```
 
 ### Transformations
 
-Control what gets copied from source events:
-
 | Transformer | Description |
 |-------------|-------------|
 | `KeepTitle` | Copy original event title |
-| `ReplaceTitle` | Replace with custom text |
+| `ReplaceTitle` | Replace with custom text (e.g., "Busy") |
 | `PrefixTitle` | Add prefix to title |
 | `KeepLocation` | Copy location |
 | `KeepDescription` | Copy description |
 | `KeepReminders` | Copy reminder settings |
-| `KeepAttendees` | Copy attendee list |
-| `KeepMeetingLink` | Add meeting link to description |
 
 ### Filters
-
-Control which events get synced:
 
 | Filter | Description |
 |--------|-------------|
 | `DeclinedEvents` | Skip events you've declined |
 | `AllDayEvents` | Skip all-day events |
-| `TitleRegex` | Skip events matching regex |
-| `TimeFrame` | Only sync within time window (e.g., 8am-6pm) |
-
-### Preventing Sync Loops
-
-The example configs include a `TitleRegex` filter to prevent synced events from being synced back:
-
-```yaml
-filters:
-  - name: TitleRegex
-    config:
-      Regex: "^Busy \\(synced from Calendar [AB]\\)$"
-```
-
-**Important:** Keep your `ReplaceTitle` text consistent and make sure the regex matches it.
-
-## Troubleshooting
-
-### "Token has been revoked"
-Re-authenticate: `docker compose run --rm auth`
-
-### Events not syncing
-- Check calendar IDs are correct
-- Verify OAuth app has calendar scope
-- Check sync window (start/end dates)
-- Review filters - they might be excluding your events
-
-### Duplicate events
-- Ensure `TitleRegex` filter matches your `ReplaceTitle` text
-- CalendarSync should update existing synced events, not create duplicates
-
-### "Access blocked" during OAuth
-- Add your email to test users in Google Cloud Console
-- Or publish the OAuth app (requires verification for sensitive scopes)
+| `RegexTitle` | Skip events matching regex |
+| `TimeFrame` | Only sync within time window |
 
 ## Files
 
 ```
 calendar-sync/
 ├── config/
-│   ├── sync-a-to-b.yaml.example    # Template for A→B sync
-│   └── sync-b-to-a.yaml.example    # Template for B→A sync
-├── data/                            # Auth tokens (gitignored)
+│   ├── systeric-to-laku6.yaml          # Your config (gitignored)
+│   └── systeric-to-laku6.yaml.example  # Template
+├── data/                                # Auth tokens (gitignored)
 ├── scripts/
-│   ├── setup.sh                     # Initial setup helper
-│   └── sync-all.sh                  # Run both syncs
+│   ├── setup.sh                        # Initial setup
+│   └── fix-transparency.gs             # Google Apps Script (see below)
+├── .env                                 # Encryption key (gitignored)
+├── .env.example
 ├── docker-compose.yml
 ├── Dockerfile
-├── .env.example
+├── package.json                        # pnpm scripts
 └── README.md
 ```
 
-## Cleanup
+## Fix: Notion Calendar Not Combining Events
 
-To remove all synced blocker events:
+CalendarSync doesn't set event transparency to "opaque", so synced events show as "free" instead of "busy". This prevents Notion Calendar from combining overlapping events.
 
-```bash
-# Clean synced events from Calendar B
-docker compose run --rm calendarsync --config /app/config/sync-a-to-b.yaml --clean
+**Solution**: Use the Google Apps Script in `scripts/fix-transparency.gs`:
 
-# Clean synced events from Calendar A
-docker compose run --rm calendarsync --config /app/config/sync-b-to-a.yaml --clean
-```
+1. Go to [script.google.com](https://script.google.com)
+2. Create new project, paste the script
+3. Click **Services** (+) → Add **Google Calendar API**
+4. Run `fixSyncedEventTransparency()`
+5. (Optional) Run `createTrigger()` to automate every 30 minutes
+
+## Troubleshooting
+
+### Synced events not combining in Notion Calendar
+Events show as "free" instead of "busy". Use the `fix-transparency.gs` script above.
+
+### "redirect_uri_mismatch" error
+Your OAuth credentials are **Web application** type. Delete and recreate as **Desktop app** type.
+
+### "Token has been revoked"
+Re-run the sync command to re-authenticate.
+
+### Events not syncing
+- Check calendar IDs are correct
+- Verify OAuth app has calendar scope
+- Check sync window (MonthStart/MonthEnd)
+- Ensure test users are added in Google Cloud Console
 
 ## References
 

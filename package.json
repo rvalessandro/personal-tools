@@ -1,0 +1,13 @@
+{
+  "name": "andro-tools",
+  "private": true,
+  "scripts": {
+    "calendar:sync": "cd calendar-sync && CALENDARSYNC_ENCRYPTION_KEY=$CALENDARSYNC_ENCRYPTION_KEY ./calendarsync --config config/systeric-to-laku6.yaml",
+    "calendar:clean": "cd calendar-sync && CALENDARSYNC_ENCRYPTION_KEY=$CALENDARSYNC_ENCRYPTION_KEY ./calendarsync --config config/systeric-to-laku6.yaml --clean",
+    "calendar:dry-run": "cd calendar-sync && CALENDARSYNC_ENCRYPTION_KEY=$CALENDARSYNC_ENCRYPTION_KEY ./calendarsync --config config/systeric-to-laku6.yaml --dry-run"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "pnpm@9.15.1"
+}

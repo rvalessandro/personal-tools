@@ -1,60 +1,44 @@
 # CalendarSync Configuration: Systeric -> Laku6
 # Copy this file to systeric-to-laku6.yaml and fill in your values
 #
+# IMPORTANT: Use Desktop app OAuth credentials (not Web application)
+# See README.md for setup instructions
+#
 # Documentation: https://github.com/inovex/CalendarSync
 
 sync:
-  # Time window for syncing events
   start:
     identifier: MonthStart
-    offset: 0          # Start of current month
+    offset: 0
   end:
     identifier: MonthEnd
-    offset: +1         # End of next month
+    offset: 0
 
-# Source calendar (Systeric)
+# Source: Systeric calendar
 source:
   adapter:
     type: google
-    config:
-      # Get these from Google Cloud Console (see README)
-      ClientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
-      ClientSecret: "YOUR_CLIENT_SECRET"
-      CalendarId: "andro@systeric.com"
+    calendar: "andro@systeric.com"
+    oAuth:
+      clientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      clientKey: "YOUR_CLIENT_SECRET"
 
-# Sink calendar (Laku6 - where blocker events will be created)
+# Sink: Laku6 calendar (where blocker events will be created)
 sink:
   adapter:
     type: google
-    config:
-      ClientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
-      ClientSecret: "YOUR_CLIENT_SECRET"
-      CalendarId: "andro@laku6.com"
+    calendar: "andro@laku6.com"
+    oAuth:
+      clientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      clientKey: "YOUR_CLIENT_SECRET"
 
-# Transformations: what to copy from source events
 transformations:
-  # Option 1: Keep original title (less private)
-  # - name: KeepTitle
-
-  # Option 2: Replace with generic title (more private)
   - name: ReplaceTitle
     config:
-      NewTitle: "Busy"
+      NewTitle: "Busy (Synced)"
 
-  # Optional: Keep location info
-  # - name: KeepLocation
-
-  # Optional: Keep reminders
-  # - name: KeepReminders
-
-# Filters: which events to exclude from syncing
 filters:
-  # Don't sync events you've declined
   - name: DeclinedEvents
 
-  # Don't sync all-day events (optional)
-  # - name: AllDayEvents
-
-# Storage for auth tokens (will be created automatically)
 storage:
-  path: "/app/data/auth-storage.yaml"
+  path: "./data/auth-storage.yaml"

@@ -1,13 +1,13 @@
-# Environment files with secrets
-.env
+# Binary
+calendarsync
+CHANGELOG.md
+LICENSE.md
 
-# Config files with OAuth credentials
+# Config with secrets
 config/systeric-to-laku6.yaml
 
-# Auth token storage
+# Auth tokens
 data/
-*.yaml.bak
 
-# Keep example files
+# Keep examples
 !config/*.example
-!.env.example
