@@ -1,29 +1,17 @@
 # Telegram Bot for Claude Code
 
-Chat with Claude Code via Telegram. Access your MCPs (Linear, SigNoz, Metabase), file system, and all Claude Code tools from your phone.
+Chat with Claude Code via Telegram. Full access to file system, MCPs, and all Claude Code tools.
 
-## Docker Deployment (Recommended)
+## Setup
 
-From the root of `andro-tools`:
-
-```bash
-# Copy and configure environment
-cp .env.example .env
-
-# Start the bot
-docker compose up -d telegram-bot
-
-# View logs
-docker compose logs -f telegram-bot
-```
-
-## Local Development
+1. Install Claude Code on server: `npm install -g @anthropic-ai/claude-code`
+2. Authenticate: `claude` (follow OAuth flow)
+3. Configure `.env` at repo root
+4. Build and run:
 
 ```bash
-cd telegram-bot
-pnpm install
-cp ../.env.example .env  # Edit with your values
-pnpm dev
+make bot-build
+make bot
 ```
 
 ## Commands
@@ -32,12 +20,27 @@ pnpm dev
 - `/new` - Start fresh conversation
 - `/help` - Show help
 
+## Production (PM2)
+
+```bash
+# Install PM2
+npm install -g pm2
+
+# Start
+cd telegram-bot
+pm2 start dist/index.js --name telegram-bot
+
+# Auto-start on reboot
+pm2 save
+pm2 startup
+```
+
 ## How It Works
 
 ```
 You (Telegram) → Bot → claude -p "message" → Response
 ```
 
-- Uses Claude CLI with session resumption
-- Mounts your workspace for file access
-- Mounts ~/.claude for MCP server configs
+- Runs directly on server (no Docker)
+- Calls `claude` CLI with full file system access
+- Session continuity per user via `--resume`

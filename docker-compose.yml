@@ -1,17 +1,4 @@
 services:
-  telegram-bot:
-    build: ./telegram-bot
-    restart: unless-stopped
-    environment:
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - ALLOWED_USER_IDS=${ALLOWED_USER_IDS}
-      - WORKING_DIRECTORY=/workspace
-    volumes:
-      # Mount your project for Claude to access
-      - ${WORKSPACE_PATH:-./}:/workspace:ro
-      # Claude CLI config (OAuth tokens + MCP configs)
-      - ${CLAUDE_CONFIG_PATH:-~/.claude}:/root/.claude:ro
-
   calendar-sync:
     build: ./calendar-sync
     restart: "no"
