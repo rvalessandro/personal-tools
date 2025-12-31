@@ -47,9 +47,14 @@ export async function askClaude(
     };
 
     exec(cmd, { cwd: workingDir, maxBuffer: 10 * 1024 * 1024, timeout: 20000, env }, (error, stdout, stderr) => {
-      console.log(`[Claude] Completed. stdout length: ${stdout.length}`);
-      if (stderr) console.log(`[Claude] stderr: ${stderr}`);
-      if (error) console.log(`[Claude] error: ${error.message}`);
+      console.log(`[Claude] Completed. stdout length: ${stdout?.length || 0}, stderr length: ${stderr?.length || 0}`);
+      console.log(`[Claude] stdout: ${stdout?.substring(0, 200) || "(empty)"}`);
+      console.log(`[Claude] stderr: ${stderr?.substring(0, 200) || "(empty)"}`);
+      if (error) {
+        console.log(`[Claude] error code: ${error.code}`);
+        console.log(`[Claude] error signal: ${error.signal}`);
+        console.log(`[Claude] error message: ${error.message}`);
+      }
 
       if (error) {
         resolve({
