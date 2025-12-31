@@ -40,7 +40,13 @@ export async function askClaude(
 
     console.log(`[Claude] Command: ${cmd.substring(0, 100)}...`);
 
-    exec(cmd, { cwd: workingDir, maxBuffer: 10 * 1024 * 1024, timeout: 120000 }, (error, stdout, stderr) => {
+    const env = {
+      ...process.env,
+      HOME: homedir(),
+      PATH: `${join(homedir(), ".local/bin")}:${process.env.PATH}`,
+    };
+
+    exec(cmd, { cwd: workingDir, maxBuffer: 10 * 1024 * 1024, timeout: 20000, env }, (error, stdout, stderr) => {
       console.log(`[Claude] Completed. stdout length: ${stdout.length}`);
       if (stderr) console.log(`[Claude] stderr: ${stderr}`);
       if (error) console.log(`[Claude] error: ${error.message}`);

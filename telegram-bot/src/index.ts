@@ -101,6 +101,8 @@ bot.on(message("text"), (ctx) => {
 bot.launch();
 console.log(`Bot started. Working directory: ${WORKING_DIR}`);
 console.log(`Allowed users: ${ALLOWED_USERS.join(", ")}`);
+console.log(`HOME: ${process.env.HOME}`);
+console.log(`USER: ${process.env.USER}`);
 
 // Graceful shutdown
 process.once("SIGINT", () => bot.stop("SIGINT"));
