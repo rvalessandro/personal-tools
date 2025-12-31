@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { exec } from "child_process";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -40,61 +40,23 @@ export async function askClaude(
 
     console.log(`[Claude] Command: ${cmd.substring(0, 100)}...`);
 
-    const claude = spawn(cmd, [], {
-      cwd: workingDir,
-      shell: true,
-    });
-
-    let stdout = "";
-    let stderr = "";
-    let resolved = false;
-
-    // Timeout after 120 seconds
-    const timeout = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        console.log(`[Claude] Timeout - killing process`);
-        claude.kill();
-        resolve({
-          response: "Claude timed out after 120 seconds",
-          error: "timeout",
-        });
-      }
-    }, 120000);
-
-    claude.stdout.on("data", (data) => {
-      stdout += data.toString();
-      console.log(`[Claude] stdout chunk: ${data.toString().substring(0, 100)}`);
-    });
-
-    claude.stderr.on("data", (data) => {
-      stderr += data.toString();
-      console.log(`[Claude] stderr chunk: ${data.toString().substring(0, 100)}`);
-    });
-
-    claude.on("close", (code) => {
-      if (resolved) return;
-      resolved = true;
-      clearTimeout(timeout);
-
-      console.log(`[Claude] Exit code: ${code}`);
-      console.log(`[Claude] stdout length: ${stdout.length}`);
+    exec(cmd, { cwd: workingDir, maxBuffer: 10 * 1024 * 1024, timeout: 120000 }, (error, stdout, stderr) => {
+      console.log(`[Claude] Completed. stdout length: ${stdout.length}`);
       if (stderr) console.log(`[Claude] stderr: ${stderr}`);
+      if (error) console.log(`[Claude] error: ${error.message}`);
 
-      if (code !== 0) {
+      if (error) {
         resolve({
-          response: `Error: ${stderr || "Claude exited with code " + code}`,
-          error: stderr,
+          response: `Error: ${error.message}`,
+          error: error.message,
         });
         return;
       }
 
       try {
-        // Parse JSON response from Claude
         const parsed = JSON.parse(stdout);
         const newSessionId = parsed.session_id;
 
-        // Store session for continuity
         if (newSessionId) {
           sessions.set(userId, newSessionId);
         }
@@ -106,21 +68,9 @@ export async function askClaude(
           sessionId: newSessionId,
         });
       } catch {
-        // If not JSON, return raw output
-        console.log(`[Claude] Non-JSON response: ${stdout.substring(0, 100)}`);
-        resolve({ response: stdout });
+        console.log(`[Claude] Non-JSON: ${stdout.substring(0, 100)}`);
+        resolve({ response: stdout || "No response from Claude" });
       }
-    });
-
-    claude.on("error", (err) => {
-      if (resolved) return;
-      resolved = true;
-      clearTimeout(timeout);
-      console.log(`[Claude] Spawn error: ${err.message}`);
-      resolve({
-        response: `Failed to start Claude: ${err.message}`,
-        error: err.message,
-      });
     });
   });
 }
