@@ -1,0 +1,13 @@
+# Environment files with secrets
+.env
+
+# Config files with OAuth credentials
+config/systeric-to-laku6.yaml
+
+# Auth token storage
+data/
+*.yaml.bak
+
+# Keep example files
+!config/*.example
+!.env.example

@@ -1,0 +1,60 @@
+# CalendarSync Configuration: Systeric -> Laku6
+# Copy this file to systeric-to-laku6.yaml and fill in your values
+#
+# Documentation: https://github.com/inovex/CalendarSync
+
+sync:
+  # Time window for syncing events
+  start:
+    identifier: MonthStart
+    offset: 0          # Start of current month
+  end:
+    identifier: MonthEnd
+    offset: +1         # End of next month
+
+# Source calendar (Systeric)
+source:
+  adapter:
+    type: google
+    config:
+      # Get these from Google Cloud Console (see README)
+      ClientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      ClientSecret: "YOUR_CLIENT_SECRET"
+      CalendarId: "andro@systeric.com"
+
+# Sink calendar (Laku6 - where blocker events will be created)
+sink:
+  adapter:
+    type: google
+    config:
+      ClientId: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+      ClientSecret: "YOUR_CLIENT_SECRET"
+      CalendarId: "andro@laku6.com"
+
+# Transformations: what to copy from source events
+transformations:
+  # Option 1: Keep original title (less private)
+  # - name: KeepTitle
+
+  # Option 2: Replace with generic title (more private)
+  - name: ReplaceTitle
+    config:
+      NewTitle: "Busy"
+
+  # Optional: Keep location info
+  # - name: KeepLocation
+
+  # Optional: Keep reminders
+  # - name: KeepReminders
+
+# Filters: which events to exclude from syncing
+filters:
+  # Don't sync events you've declined
+  - name: DeclinedEvents
+
+  # Don't sync all-day events (optional)
+  # - name: AllDayEvents
+
+# Storage for auth tokens (will be created automatically)
+storage:
+  path: "/app/data/auth-storage.yaml"
