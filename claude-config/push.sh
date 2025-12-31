@@ -3,9 +3,15 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(dirname "$SCRIPT_DIR")"
 CLAUDE_DIR="$HOME/.claude"
 
 echo "=== Syncing Claude Config ==="
+
+# Load .env if exists
+if [ -f "$REPO_DIR/.env" ]; then
+  export $(grep -v '^#' "$REPO_DIR/.env" | xargs)
+fi
 
 # Create directories
 mkdir -p "$CLAUDE_DIR/commands"
@@ -27,17 +33,20 @@ if [ -f "$SCRIPT_DIR/mcpServers.json" ]; then
 
   # Read MCP config and merge (requires jq)
   if command -v jq &> /dev/null; then
-    # Get working directory from env or use home
+    # Get working directory from .env or use home
     WORK_DIR="${WORKING_DIRECTORY:-$HOME}"
 
-    # Update the project's MCP servers
+    # Sync to both WORKING_DIRECTORY and HOME for global access
     TMP_FILE=$(mktemp)
     jq --argjson mcps "$(cat "$SCRIPT_DIR/mcpServers.json")" \
        --arg project "$WORK_DIR" \
-       '.projects[$project].mcpServers = $mcps' \
+       --arg home "$HOME" \
+       '.projects[$project].mcpServers = $mcps | .projects[$home].mcpServers = $mcps' \
        "$CLAUDE_JSON" > "$TMP_FILE" && mv "$TMP_FILE" "$CLAUDE_JSON"
 
-    echo "MCP servers synced for project: $WORK_DIR"
+    echo "MCP servers synced for:"
+    echo "  - $WORK_DIR"
+    echo "  - $HOME"
   else
     echo "Warning: jq not installed. Skipping MCP server sync."
     echo "Install with: apt install jq"
