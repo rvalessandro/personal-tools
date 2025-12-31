@@ -5,12 +5,11 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - ALLOWED_USER_IDS=${ALLOWED_USER_IDS}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - WORKING_DIRECTORY=/workspace
     volumes:
       # Mount your project for Claude to access
       - ${WORKSPACE_PATH:-./}:/workspace:ro
-      # Claude CLI config (optional - for MCP servers)
+      # Claude CLI config (OAuth tokens + MCP configs)
       - ${CLAUDE_CONFIG_PATH:-~/.claude}:/root/.claude:ro
 
   calendar-sync:
