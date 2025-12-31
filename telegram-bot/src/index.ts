@@ -64,30 +64,37 @@ bot.command("new", (ctx) => {
 });
 
 // Handle all text messages
-bot.on(message("text"), async (ctx) => {
+bot.on(message("text"), (ctx) => {
   const userId = ctx.from.id;
+  const chatId = ctx.chat.id;
   const text = ctx.message.text;
-
-  // Show typing indicator
-  await ctx.sendChatAction("typing");
 
   console.log(`[${userId}] ${text.substring(0, 50)}...`);
 
-  const result = await askClaude(userId, text, WORKING_DIR);
+  // Send immediate acknowledgment
+  ctx.reply("Thinking...").catch(console.error);
 
-  // Telegram has 4096 char limit
-  const response = result.response;
-  if (response.length <= 4096) {
-    await ctx.reply(response, { parse_mode: "Markdown" }).catch(() => {
-      // Fallback without markdown if parsing fails
-      ctx.reply(response);
+  // Run Claude in background (don't await - avoids Telegraf timeout)
+  askClaude(userId, text, WORKING_DIR)
+    .then(async (result) => {
+      const response = result.response || "No response from Claude";
+
+      // Telegram has 4096 char limit
+      if (response.length <= 4096) {
+        await bot.telegram
+          .sendMessage(chatId, response, { parse_mode: "Markdown" })
+          .catch(() => bot.telegram.sendMessage(chatId, response));
+      } else {
+        // Split into chunks
+        for (let i = 0; i < response.length; i += 4096) {
+          await bot.telegram.sendMessage(chatId, response.slice(i, i + 4096));
+        }
+      }
+    })
+    .catch((err) => {
+      console.error(`[Claude] Error: ${err.message}`);
+      bot.telegram.sendMessage(chatId, `Error: ${err.message}`).catch(console.error);
     });
-  } else {
-    // Split into chunks
-    for (let i = 0; i < response.length; i += 4096) {
-      await ctx.reply(response.slice(i, i + 4096));
-    }
-  }
 });
 
 // Start bot

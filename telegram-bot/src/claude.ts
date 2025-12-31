@@ -32,7 +32,13 @@ export async function askClaude(
   console.log(`[Claude] Working dir: ${workingDir}`);
 
   return new Promise((resolve) => {
-    const claude = spawn("claude", args, {
+    // Build command string for shell execution
+    const escapedPrompt = prompt.replace(/'/g, "'\\''");
+    const cmd = sessionId
+      ? `claude -p '${escapedPrompt}' --output-format json --resume '${sessionId}'`
+      : `claude -p '${escapedPrompt}' --output-format json`;
+
+    const claude = spawn(cmd, [], {
       cwd: workingDir,
       shell: true,
       env: {
