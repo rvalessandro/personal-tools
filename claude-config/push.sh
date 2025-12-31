@@ -39,17 +39,19 @@ if [ -f "$SCRIPT_DIR/mcpServers.json" ]; then
     # Substitute environment variables in mcpServers.json
     MCP_CONFIG=$(envsubst < "$SCRIPT_DIR/mcpServers.json")
 
-    # Sync to both WORKING_DIRECTORY and HOME for global access
+    # Sync to WORKING_DIRECTORY, HOME, and current repo for global access
     TMP_FILE=$(mktemp)
     jq --argjson mcps "$MCP_CONFIG" \
        --arg project "$WORK_DIR" \
        --arg home "$HOME" \
-       '.projects[$project].mcpServers = $mcps | .projects[$home].mcpServers = $mcps' \
+       --arg repo "$REPO_DIR" \
+       '.projects[$project].mcpServers = $mcps | .projects[$home].mcpServers = $mcps | .projects[$repo].mcpServers = $mcps' \
        "$CLAUDE_JSON" > "$TMP_FILE" && mv "$TMP_FILE" "$CLAUDE_JSON"
 
     echo "MCP servers synced for:"
     echo "  - $WORK_DIR"
     echo "  - $HOME"
+    echo "  - $REPO_DIR"
   else
     echo "Warning: jq not installed. Skipping MCP server sync."
     echo "Install with: apt install jq"
