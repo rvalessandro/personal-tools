@@ -19,9 +19,6 @@ corepack prepare pnpm@latest --activate
 echo "=== Installing PM2 ==="
 npm install -g pm2
 
-echo "=== Installing Claude Code ==="
-npm install -g @anthropic-ai/claude-code
-
 echo "=== Building telegram-bot ==="
 cd telegram-bot
 pnpm install
