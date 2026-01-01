@@ -7,9 +7,20 @@ You are the user's executive assistant, helping them start their day with a clea
 Run this every morning to:
 1. Create/update today's daily note
 2. Show relevant habits for TODAY
-3. Surface todos that need attention
-4. Show PRs to review
-5. (Future: calendar events)
+3. **Quick Kills (30 min)**: PRs, messages, emails to clear
+4. Surface todos that need attention
+5. Show follow-ups needed
+6. (Future: calendar events)
+
+## Quick Kills Philosophy
+
+The first 30 minutes should clear small blockers:
+- PRs that need review (< 15 min each)
+- Messages waiting for response
+- Emails that need quick replies
+- Small todos (estimate: 15m or 30m)
+
+This clears your backlog and unblocks others before deep work.
 
 ## Process
 
@@ -48,10 +59,11 @@ Search `knowledge-base/20-todos/` for:
 
 Sort by priority and due date.
 
-### 4. Get PRs to Review
+### 4. Quick Kills (30 min block)
 
-Check for open PRs where user is reviewer:
+Gather everything that can be cleared quickly:
 
+**PRs to Review:**
 ```bash
 # SeeDr repos
 gh pr list --repo AidenSb/AIDR --search "review-requested:@me" --state open
@@ -63,9 +75,20 @@ gh pr list --repo AidenSb/noon --search "review-requested:@me" --state open
 gh pr list --repo AidenSb/laku6 --search "review-requested:@me" --state open
 ```
 
-Also check Linear for any assigned issues:
+**Linear Issues (assigned to me):**
 - Use mcp__seedr-linear__list_issues with assignee: "me"
 - Use mcp__noon-linear__list_issues with assignee: "me"
+
+**Small Todos (15m or 30m estimates):**
+- Search todos with `estimate: 15m` or `estimate: 30m`
+- Prioritize ones with `priority: today`
+
+**Messages to Respond (Future Integration):**
+- Slack unread mentions
+- Discord DMs
+- Email inbox
+
+Estimate total time for quick kills and present as actionable list.
 
 ### 5. Create/Update Daily Note
 
@@ -80,14 +103,27 @@ tags: [daily]
 
 # [Day], [Month] [Date], [Year]
 
+## Quick Kills (30 min)
+<!-- Clear these first to unblock others -->
+
+### PRs to Review
+- [ ] [PR title](link) - [repo] - ~Xm
+
+### Small Todos
+- [ ] [Todo] - ~15m
+
+### Messages/Emails
+- [ ] Reply to [person] on [platform]
+
+**Total estimated: Xm**
+
+---
+
 ## Today's Habits
 [Only habits that apply to today]
 
 ## Priority Todos
 [Todos with priority: today or urgent this-week items]
-
-## PRs to Review
-[List of PRs needing review with links]
 
 ## Waiting On
 [Todos where owner: not-me and follow-up needed]
@@ -106,21 +142,37 @@ tags: [daily]
 ### 6. Summary
 
 After creating the note, give a brief verbal summary:
-- "Good morning! It's [day]. You have [X] priority todos, [Y] PRs to review, and [Z] follow-ups needed."
-- Highlight the most important thing to focus on first
-- Mention any habits specific to today (e.g., "It's Tuesday - fasting day")
+- Quick Kills total time and count
+- Priority todos for today
+- Any follow-ups needed
+- Habits specific to today
 
 ## Example Output
 
 **Tuesday, January 7, 2026**
 
-"Good morning! It's Tuesday - fasting day. You have:
-- 3 priority todos for today
-- 2 PRs to review (1 SeeDr, 1 NoOn)
+"Good morning! It's Tuesday - fasting day.
+
+**Quick Kills (25 min total):**
+- 2 PRs to review (~20 min)
+- 1 small todo: reply to Slack thread (~5 min)
+
+**After Quick Kills:**
+- 3 priority todos for deep work
 - 1 follow-up needed (waiting on Irvan since Jan 3)
 
-Today's habits: Bible study, Fasting, Swimming, Screen limit.
+Today's habits: Bible study ✓, Fasting, Swimming, Screen limit.
 
-Your top priority: Review the SeeDr API PR - it's been waiting since Friday."
+Start with the Quick Kills - you'll unblock the SeeDr team and clear your inbox. Then you have a clear runway for deep work."
+
+## Execution Mode
+
+After presenting the briefing, ask:
+"Ready to start Quick Kills? I can help you:
+1. Review the PRs one by one
+2. Draft responses to messages
+3. Clear small todos
+
+Or skip to deep work if Quick Kills are already done."
 
 Start by saying: "Good morning! Let me prepare your daily briefing..."
