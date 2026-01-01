@@ -21,7 +21,7 @@ make syncthing-install
 
 To access Web UI remotely, create SSH tunnel:
 ```bash
-ssh -L 8384:localhost:8384 user@82.197.68.253
+ssh -L 8384:localhost:8384 systeric-staging
 # Then open http://localhost:8384 in browser
 ```
 
