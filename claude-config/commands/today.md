@@ -84,14 +84,20 @@ Execute these simultaneously:
 1. `gh search prs --review-requested=@me --state=open` (all orgs)
 2. `gh pr list --repo AidenSb/reallysick-monorepo --search "review-requested:@me" --state open`
 3. `gh pr list --repo AidenSb/noon-monorepo --search "review-requested:@me" --state open`
-4. `mcp__seedr-linear__list_issues` with assignee: "me"
-5. `mcp__noon-linear__list_issues` with assignee: "me"
-6. Grep for todos with `estimate: 15m` or `estimate: 30m` in `knowledge-base/20-todos/`
+4. `gh pr list --repo AidenSb/reallysick-monorepo --search "no:assignee" --state open` (unassigned)
+5. `gh pr list --repo AidenSb/noon-monorepo --search "no:assignee" --state open` (unassigned)
+6. `mcp__seedr-linear__list_issues` with assignee: "me"
+7. `mcp__noon-linear__list_issues` with assignee: "me"
+8. Grep for todos with `estimate: 15m` or `estimate: 30m` in `knowledge-base/20-todos/`
 
 **After parallel fetches complete, organize results:**
 
-**PRs to Review:**
-- List from all 3 repos above
+**PRs to Review (assigned to me):**
+- List from search + specific repo checks
+
+**Unassigned PRs (needs owner):**
+- List PRs with no reviewer from monorepos
+- These may need someone to pick them up
 
 **Linear Issues (assigned to me):**
 - Combine results from both workspaces
@@ -124,6 +130,10 @@ tags: [daily]
 
 ### PRs to Review
 - [ ] [PR title](link) - [repo] - ~Xm
+
+### Unassigned PRs
+<!-- PRs needing an owner - consider picking one up -->
+- [ ] [PR title](link) - [repo]
 
 ### Small Todos
 - [ ] [Todo] - ~15m
