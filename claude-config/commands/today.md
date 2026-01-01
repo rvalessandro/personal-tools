@@ -24,13 +24,28 @@ This clears your backlog and unblocks others before deep work.
 
 ## Process
 
-### 1. Determine Today's Context
+### 1. Check for Existing Daily Note
+
+First, check if today's note already exists:
+```
+knowledge-base/daily/YYYY-MM-DD.md
+```
+
+**If EXISTS:** Read the note and provide an update:
+- Show what's been completed (checked items)
+- Show what's remaining
+- Refresh Quick Kills (check for new PRs, messages)
+- Ask: "Want me to update the note with new items?"
+
+**If NOT EXISTS:** Create fresh daily note (continue to step 2)
+
+### 2. Determine Today's Context
 
 Get today's date and day of week:
 - What day is it? (Mon/Tue/Wed/Thu/Fri/Sat/Sun)
 - What's the date? (for monthly habits like tithe)
 
-### 2. Filter Habits for Today
+### 3. Filter Habits for Today
 
 Only show habits that apply TODAY:
 
@@ -50,7 +65,7 @@ Only show habits that apply TODAY:
 **End of month (25th-31st):**
 - [ ] Tithe (8M IDR)
 
-### 3. Get Todos Needing Attention
+### 4. Get Todos Needing Attention
 
 Search `knowledge-base/20-todos/` for:
 - `priority: today` - MUST do today
@@ -59,7 +74,7 @@ Search `knowledge-base/20-todos/` for:
 
 Sort by priority and due date.
 
-### 4. Quick Kills (30 min block)
+### 5. Quick Kills (30 min block)
 
 Gather everything that can be cleared quickly:
 
@@ -90,7 +105,7 @@ gh pr list --repo AidenSb/laku6 --search "review-requested:@me" --state open
 
 Estimate total time for quick kills and present as actionable list.
 
-### 5. Create/Update Daily Note
+### 6. Create/Update Daily Note
 
 Write to `knowledge-base/daily/YYYY-MM-DD.md`:
 
@@ -139,7 +154,7 @@ tags: [daily]
 <!-- Fill this out tonight -->
 ```
 
-### 6. Summary
+### 7. Summary
 
 After creating the note, give a brief verbal summary:
 - Quick Kills total time and count
