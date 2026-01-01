@@ -40,7 +40,7 @@ bot-restart:
 	pm2 restart telegram-bot
 
 bot-deploy:
-	git pull && cd telegram-bot && pnpm install && pnpm build && pm2 restart telegram-bot
+	git pull && $(MAKE) bot-build && $(MAKE) bot-restart
 
 # Calendar Sync
 calendar-sync:
