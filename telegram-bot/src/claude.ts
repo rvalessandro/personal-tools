@@ -79,6 +79,7 @@ export async function askClaude(
     const args = [
       "-p", prompt,
       "--output-format", "stream-json",
+      "--verbose",
       "--dangerously-skip-permissions",
       "--model", claudeModel,
     ];
