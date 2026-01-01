@@ -3,9 +3,14 @@
 10-notes/*
 20-todos/*
 30-habits/*
+daily/*
 
 # Keep the folders themselves
 !00-inbox/.gitkeep
 !10-notes/.gitkeep
 !20-todos/.gitkeep
 !30-habits/.gitkeep
+!daily/.gitkeep
+
+# Keep dashboard
+!30-habits/_dashboard.md
