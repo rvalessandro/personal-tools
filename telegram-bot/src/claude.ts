@@ -1,4 +1,5 @@
 import { spawn } from "child_process";
+import { existsSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 
@@ -43,11 +44,14 @@ export async function askClaude(
     }
 
     console.log(`[Claude] Spawning: ${CLAUDE_PATH} with args:`, args.slice(0, 3));
+    console.log(`[Claude] Binary exists: ${existsSync(CLAUDE_PATH)}, HOME: ${homedir()}`);
 
+    // Ensure PATH includes common binary locations for pm2 environment
+    const basePath = process.env.PATH || "/usr/local/bin:/usr/bin:/bin";
     const env = {
       ...process.env,
       HOME: homedir(),
-      PATH: `${join(homedir(), ".local/bin")}:${process.env.PATH}`,
+      PATH: `${join(homedir(), ".local/bin")}:${join(homedir(), ".nvm/versions/node/v22.16.0/bin")}:/usr/local/bin:/usr/bin:/bin:${basePath}`,
     };
 
     const child = spawn(CLAUDE_PATH, args, {
