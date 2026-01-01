@@ -76,26 +76,27 @@ Sort by priority and due date.
 
 ### 5. Quick Kills (30 min block)
 
-Gather everything that can be cleared quickly:
+Gather everything that can be cleared quickly.
+
+**IMPORTANT: Run ALL data fetches in parallel (single message with multiple tool calls):**
+
+Execute these simultaneously:
+1. `gh pr list --repo AidenSb/AIDR --search "review-requested:@me" --state open`
+2. `gh pr list --repo AidenSb/noon --search "review-requested:@me" --state open`
+3. `gh pr list --repo AidenSb/laku6 --search "review-requested:@me" --state open`
+4. `mcp__seedr-linear__list_issues` with assignee: "me"
+5. `mcp__noon-linear__list_issues` with assignee: "me"
+6. Grep for todos with `estimate: 15m` or `estimate: 30m` in `knowledge-base/20-todos/`
+
+**After parallel fetches complete, organize results:**
 
 **PRs to Review:**
-```bash
-# SeeDr repos
-gh pr list --repo AidenSb/AIDR --search "review-requested:@me" --state open
-
-# NoOn repos
-gh pr list --repo AidenSb/noon --search "review-requested:@me" --state open
-
-# Laku6 repos (if accessible)
-gh pr list --repo AidenSb/laku6 --search "review-requested:@me" --state open
-```
+- List from all 3 repos above
 
 **Linear Issues (assigned to me):**
-- Use mcp__seedr-linear__list_issues with assignee: "me"
-- Use mcp__noon-linear__list_issues with assignee: "me"
+- Combine results from both workspaces
 
 **Small Todos (15m or 30m estimates):**
-- Search todos with `estimate: 15m` or `estimate: 30m`
 - Prioritize ones with `priority: today`
 
 **Messages to Respond (Future Integration):**
