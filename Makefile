@@ -1,4 +1,4 @@
-.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart calendar-sync calendar-clean pull-cc-configs push-cc-configs
+.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart bot-deploy calendar-sync calendar-clean pull-cc-configs push-cc-configs
 
 help:
 	@echo "Usage: make <target>"
@@ -10,6 +10,7 @@ help:
 	@echo "  bot-stop     Stop background process"
 	@echo "  bot-logs     View logs"
 	@echo "  bot-restart  Restart bot"
+	@echo "  bot-deploy   Pull, build, and restart"
 	@echo ""
 	@echo "Calendar Sync:"
 	@echo "  calendar-sync   Run calendar sync"
@@ -37,6 +38,9 @@ bot-logs:
 
 bot-restart:
 	pm2 restart telegram-bot
+
+bot-deploy:
+	git pull && cd telegram-bot && pnpm install && pnpm build && pm2 restart telegram-bot
 
 # Calendar Sync
 calendar-sync:
