@@ -1,4 +1,4 @@
-.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart bot-deploy calendar-sync calendar-clean pull-cc-configs push-cc-configs
+.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart bot-deploy calendar-sync calendar-clean pull-cc-configs push-cc-configs livesync-start livesync-stop livesync-logs livesync-init
 
 help:
 	@echo "Usage: make <target>"
@@ -19,6 +19,12 @@ help:
 	@echo "Claude Config:"
 	@echo "  pull-cc-configs  Pull ~/.claude configs into repo (for committing)"
 	@echo "  push-cc-configs  Apply repo configs to ~/.claude (on server)"
+	@echo ""
+	@echo "LiveSync (Obsidian):"
+	@echo "  livesync-start   Start CouchDB container"
+	@echo "  livesync-stop    Stop CouchDB container"
+	@echo "  livesync-logs    View CouchDB logs"
+	@echo "  livesync-init    Initialize database (first time)"
 
 # Telegram Bot
 bot-build:
@@ -55,3 +61,20 @@ pull-cc-configs:
 
 push-cc-configs:
 	./claude-config/push.sh
+
+# LiveSync (Obsidian)
+livesync-start:
+	docker compose --profile livesync up -d couchdb
+
+livesync-stop:
+	docker compose --profile livesync stop couchdb
+
+livesync-logs:
+	docker compose --profile livesync logs -f couchdb
+
+livesync-init:
+	@echo "Initializing CouchDB database for LiveSync..."
+	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/obsidian-livesync
+	@echo "\nDatabase created. Configure your Obsidian LiveSync plugin with:"
+	@echo "  URI: https://your-server.com/couchdb"
+	@echo "  Database: obsidian-livesync"
