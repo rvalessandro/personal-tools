@@ -8,6 +8,12 @@ interface ClaudeResult {
   error?: string;
 }
 
+// Timeout in ms (5 minutes for complex MCP operations)
+const CLAUDE_TIMEOUT = parseInt(process.env.CLAUDE_TIMEOUT || "300000", 10);
+
+// Model to use (sonnet is faster, opus is smarter)
+const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "sonnet";
+
 // In-memory session store (per Telegram user)
 const sessions = new Map<number, string>();
 
@@ -21,22 +27,16 @@ export async function askClaude(
 ): Promise<ClaudeResult> {
   const sessionId = sessions.get(userId);
 
-  const args = ["-p", prompt, "--output-format", "json"];
-
-  // Resume session if exists
-  if (sessionId) {
-    args.push("--resume", sessionId);
-  }
-
-  console.log(`[Claude] Calling with args:`, args.slice(0, 3));
+  console.log(`[Claude] Model: ${CLAUDE_MODEL}, Timeout: ${CLAUDE_TIMEOUT / 1000}s`);
   console.log(`[Claude] Working dir: ${workingDir}`);
 
   return new Promise((resolve) => {
-    // Build args array (no shell)
+    // Build args array
     const args = [
       "-p", prompt,
       "--output-format", "json",
       "--dangerously-skip-permissions",
+      "--model", CLAUDE_MODEL,
     ];
     if (sessionId) {
       args.push("--resume", sessionId);
@@ -68,9 +68,9 @@ export async function askClaude(
     });
 
     const timeout = setTimeout(() => {
-      console.log(`[Claude] Timeout - killing`);
+      console.log(`[Claude] Timeout after ${CLAUDE_TIMEOUT / 1000}s - killing`);
       child.kill("SIGTERM");
-    }, 60000);
+    }, CLAUDE_TIMEOUT);
 
     child.on("close", (code) => {
       clearTimeout(timeout);
