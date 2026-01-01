@@ -8,6 +8,9 @@ interface ClaudeResult {
   error?: string;
 }
 
+// Progress callback type
+export type ProgressCallback = (message: string) => void;
+
 // In-memory session store (per Telegram user)
 const sessions = new Map<number, string>();
 
@@ -16,10 +19,38 @@ const getClaudePath = () => process.env.CLAUDE_PATH || join(homedir(), ".local/b
 const getClaudeTimeout = () => parseInt(process.env.CLAUDE_TIMEOUT || "300000", 10);
 const getClaudeModel = () => process.env.CLAUDE_MODEL || "sonnet";
 
+// Tool patterns to match in stderr (Claude CLI outputs tool usage)
+const TOOL_PATTERNS: { pattern: RegExp; emoji: string; label: string }[] = [
+  { pattern: /Read\(|Reading/i, emoji: "📖", label: "Reading file" },
+  { pattern: /Glob\(|Globbing/i, emoji: "🔍", label: "Finding files" },
+  { pattern: /Grep\(|Searching/i, emoji: "🔎", label: "Searching code" },
+  { pattern: /Bash\(|Running/i, emoji: "⚡", label: "Running command" },
+  { pattern: /Edit\(|Editing/i, emoji: "✏️", label: "Editing file" },
+  { pattern: /Write\(|Writing/i, emoji: "📝", label: "Writing file" },
+  { pattern: /WebFetch|Fetching/i, emoji: "🌐", label: "Fetching URL" },
+  { pattern: /WebSearch/i, emoji: "🔍", label: "Searching web" },
+  { pattern: /Task\(|Agent/i, emoji: "🤖", label: "Running agent" },
+  { pattern: /mcp__.*linear/i, emoji: "📋", label: "Linear" },
+  { pattern: /mcp__.*signoz/i, emoji: "📊", label: "SigNoz" },
+];
+
+// Debounce interval in ms
+const DEBOUNCE_INTERVAL = 5000;
+
+function parseToolFromStderr(text: string): string | null {
+  for (const { pattern, emoji, label } of TOOL_PATTERNS) {
+    if (pattern.test(text)) {
+      return `${emoji} ${label}...`;
+    }
+  }
+  return null;
+}
+
 export async function askClaude(
   userId: number,
   prompt: string,
-  workingDir: string
+  workingDir: string,
+  onProgress?: ProgressCallback
 ): Promise<ClaudeResult> {
   const sessionId = sessions.get(userId);
 
@@ -58,13 +89,29 @@ export async function askClaude(
 
     let stdout = "";
     let stderr = "";
+    let lastProgressTime = 0;
+    let lastProgressMessage = "";
 
     child.stdout.on("data", (data) => {
       stdout += data.toString();
     });
 
     child.stderr.on("data", (data) => {
-      stderr += data.toString();
+      const chunk = data.toString();
+      stderr += chunk;
+
+      // Parse and emit progress if callback provided
+      if (onProgress) {
+        const progress = parseToolFromStderr(chunk);
+        const now = Date.now();
+
+        // Debounce: only send if different message or enough time passed
+        if (progress && (progress !== lastProgressMessage || now - lastProgressTime >= DEBOUNCE_INTERVAL)) {
+          lastProgressTime = now;
+          lastProgressMessage = progress;
+          onProgress(progress);
+        }
+      }
     });
 
     const timeout = setTimeout(() => {

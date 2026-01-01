@@ -72,10 +72,17 @@ bot.on(message("text"), (ctx) => {
   console.log(`[${userId}] ${text.substring(0, 50)}...`);
 
   // Send immediate acknowledgment
-  ctx.reply("Thinking...").catch(console.error);
+  ctx.reply("🤔 Thinking...").catch(console.error);
+
+  // Progress callback - sends updates to Telegram
+  const onProgress = (message: string) => {
+    bot.telegram.sendMessage(chatId, message).catch((err) => {
+      console.log(`[Progress] Failed to send: ${err.message}`);
+    });
+  };
 
   // Run Claude in background (don't await - avoids Telegraf timeout)
-  askClaude(userId, text, WORKING_DIR)
+  askClaude(userId, text, WORKING_DIR, onProgress)
     .then(async (result) => {
       const response = result.response || "No response from Claude";
 
