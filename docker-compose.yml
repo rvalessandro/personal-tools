@@ -9,19 +9,3 @@ services:
       - ./calendar-sync/data:/app/data
     profiles:
       - calendar
-
-  couchdb:
-    image: couchdb:3
-    restart: unless-stopped
-    environment:
-      - COUCHDB_USER=${COUCHDB_USER:-admin}
-      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD}
-    volumes:
-      - couchdb-data:/opt/couchdb/data
-    ports:
-      - "5984:5984"
-    profiles:
-      - livesync
-
-volumes:
-  couchdb-data:

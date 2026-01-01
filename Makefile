@@ -1,4 +1,4 @@
-.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart bot-deploy calendar-sync calendar-clean pull-cc-configs push-cc-configs livesync-start livesync-stop livesync-logs livesync-init
+.PHONY: help bot-build bot-dev bot-start bot-stop bot-logs bot-restart bot-deploy calendar-sync calendar-clean pull-cc-configs push-cc-configs syncthing-install syncthing-status
 
 help:
 	@echo "Usage: make <target>"
@@ -20,11 +20,9 @@ help:
 	@echo "  pull-cc-configs  Pull ~/.claude configs into repo (for committing)"
 	@echo "  push-cc-configs  Apply repo configs to ~/.claude (on server)"
 	@echo ""
-	@echo "LiveSync (Obsidian):"
-	@echo "  livesync-start   Start CouchDB container"
-	@echo "  livesync-stop    Stop CouchDB container"
-	@echo "  livesync-logs    View CouchDB logs"
-	@echo "  livesync-init    Initialize database (first time)"
+	@echo "Syncthing:"
+	@echo "  syncthing-install  Install Syncthing on server"
+	@echo "  syncthing-status   Check Syncthing status"
 
 # Telegram Bot
 bot-build:
@@ -62,25 +60,16 @@ pull-cc-configs:
 push-cc-configs:
 	./claude-config/push.sh
 
-# LiveSync (Obsidian)
-livesync-start:
-	docker compose --profile livesync up -d couchdb
+# Syncthing
+syncthing-install:
+	@echo "Installing Syncthing..."
+	sudo apt-get update
+	sudo apt-get install -y syncthing
+	sudo systemctl enable syncthing@$(USER)
+	sudo systemctl start syncthing@$(USER)
+	@echo ""
+	@echo "Syncthing installed! Access Web UI at: http://127.0.0.1:8384"
+	@echo "Run 'make syncthing-status' to check status"
 
-livesync-stop:
-	docker compose --profile livesync stop couchdb
-
-livesync-logs:
-	docker compose --profile livesync logs -f couchdb
-
-livesync-init:
-	@echo "Initializing CouchDB database for LiveSync..."
-	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/obsidian-livesync
-	@echo "\nConfiguring CORS..."
-	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/chttpd/enable_cors -d '"true"'
-	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/origins -d '"app://obsidian.md,capacitor://localhost,http://localhost"'
-	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/credentials -d '"true"'
-	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/methods -d '"GET, PUT, POST, HEAD, DELETE"'
-	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/headers -d '"accept, authorization, content-type, origin, referer"'
-	@echo "\nDone. Configure your Obsidian LiveSync plugin with:"
-	@echo "  URI: http://YOUR_SERVER_IP:5984"
-	@echo "  Database: obsidian-livesync"
+syncthing-status:
+	systemctl status syncthing@$(USER) --no-pager
