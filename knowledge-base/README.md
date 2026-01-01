@@ -8,18 +8,41 @@ Personal Obsidian vault for notes, todos, and habit tracking.
 - `10-notes/` - Processed knowledge base entries
 - `20-todos/` - Task management
 - `30-habits/` - Habit tracking
+- `40-contacts/` - Personal CRM
+- `daily/` - Daily notes
 - `templates/` - Note templates for Obsidian
 
-## Usage
+## Sync Setup
 
-Open this folder as an Obsidian vault. Templates are available in the `templates/` folder for creating new notes.
+Uses git for syncing between desktop and server (no Syncthing).
+
+### Desktop (Obsidian)
+
+Install the `obsidian-git` plugin:
+1. Settings → Community plugins → Browse → "Obsidian Git"
+2. Configure auto-commit interval (e.g., every 10 minutes)
+3. Enable auto-pull on startup
+
+### Server
+
+```bash
+# Clone the repo
+git clone <repo-url> ~/andro-tools
+cd ~/andro-tools/knowledge-base/scripts
+
+# Run setup (installs systemd timer)
+./setup-server.sh
+
+# Check status
+systemctl --user status kb-sync.timer
+```
+
+The timer runs every 5 minutes to commit and push any changes.
 
 ## Claude Code Integration
 
-Since this vault is in the same repo, Claude Code has native access to all files. No MCP server needed.
+Since this vault is in the same repo, Claude Code has native access to all files.
 
-**Example prompts:**
-- "List all notes in knowledge-base/00-inbox"
-- "Create a new note in knowledge-base/00-inbox"
-- "Search for 'project' in knowledge-base"
-- "Read my todo template"
+**Slash commands:**
+- `/todo` - Create a new todo
+- `/today` - Morning briefing with habits, todos, and quick kills

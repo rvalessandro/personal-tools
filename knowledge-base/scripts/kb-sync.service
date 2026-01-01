@@ -1,0 +1,6 @@
+[Unit]
+Description=Knowledge Base Auto Sync
+
+[Service]
+Type=oneshot
+ExecStart=%h/andro-tools/knowledge-base/scripts/autocommit.sh
