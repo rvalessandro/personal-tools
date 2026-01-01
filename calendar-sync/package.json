@@ -1,0 +1,12 @@
+{
+  "name": "@andro-tools/calendar-sync",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "sync": "CALENDARSYNC_ENCRYPTION_KEY=${CALENDARSYNC_ENCRYPTION_KEY} ./calendarsync --config config/systeric-to-laku6.yaml",
+    "today": "node scripts/get-today-events.js"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}
