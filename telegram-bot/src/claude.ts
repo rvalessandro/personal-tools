@@ -8,17 +8,13 @@ interface ClaudeResult {
   error?: string;
 }
 
-// Timeout in ms (5 minutes for complex MCP operations)
-const CLAUDE_TIMEOUT = parseInt(process.env.CLAUDE_TIMEOUT || "300000", 10);
-
-// Model to use (sonnet is faster, opus is smarter)
-const CLAUDE_MODEL = process.env.CLAUDE_MODEL || "sonnet";
-
 // In-memory session store (per Telegram user)
 const sessions = new Map<number, string>();
 
-// Claude binary path
-const CLAUDE_PATH = process.env.CLAUDE_PATH || join(homedir(), ".local/bin/claude");
+// Config getters (evaluated lazily after dotenv loads)
+const getClaudePath = () => process.env.CLAUDE_PATH || join(homedir(), ".local/bin/claude");
+const getClaudeTimeout = () => parseInt(process.env.CLAUDE_TIMEOUT || "300000", 10);
+const getClaudeModel = () => process.env.CLAUDE_MODEL || "sonnet";
 
 export async function askClaude(
   userId: number,
@@ -27,7 +23,11 @@ export async function askClaude(
 ): Promise<ClaudeResult> {
   const sessionId = sessions.get(userId);
 
-  console.log(`[Claude] Model: ${CLAUDE_MODEL}, Timeout: ${CLAUDE_TIMEOUT / 1000}s`);
+  const claudePath = getClaudePath();
+  const claudeTimeout = getClaudeTimeout();
+  const claudeModel = getClaudeModel();
+
+  console.log(`[Claude] Path: ${claudePath}, Model: ${claudeModel}, Timeout: ${claudeTimeout / 1000}s`);
   console.log(`[Claude] Working dir: ${workingDir}`);
 
   return new Promise((resolve) => {
@@ -36,13 +36,13 @@ export async function askClaude(
       "-p", prompt,
       "--output-format", "json",
       "--dangerously-skip-permissions",
-      "--model", CLAUDE_MODEL,
+      "--model", claudeModel,
     ];
     if (sessionId) {
       args.push("--resume", sessionId);
     }
 
-    console.log(`[Claude] Spawning: ${CLAUDE_PATH} with args:`, args.slice(0, 3));
+    console.log(`[Claude] Spawning: ${claudePath} with args:`, args.slice(0, 3));
 
     const env = {
       ...process.env,
@@ -50,7 +50,7 @@ export async function askClaude(
       PATH: `${join(homedir(), ".local/bin")}:${process.env.PATH}`,
     };
 
-    const child = spawn(CLAUDE_PATH, args, {
+    const child = spawn(claudePath, args, {
       cwd: workingDir,
       env,
       stdio: ["ignore", "pipe", "pipe"],
@@ -68,9 +68,9 @@ export async function askClaude(
     });
 
     const timeout = setTimeout(() => {
-      console.log(`[Claude] Timeout after ${CLAUDE_TIMEOUT / 1000}s - killing`);
+      console.log(`[Claude] Timeout after ${claudeTimeout / 1000}s - killing`);
       child.kill("SIGTERM");
-    }, CLAUDE_TIMEOUT);
+    }, claudeTimeout);
 
     child.on("close", (code) => {
       clearTimeout(timeout);
