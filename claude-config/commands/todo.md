@@ -29,7 +29,12 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
 
 1. **Understand the task**: Ask about what needs to be done (or use provided arguments)
 
-2. **Infer and confirm**: Based on the task, INFER the following (then confirm with user):
+2. **Detect people**: If the task mentions a person by name:
+   - Search `knowledge-base/40-contacts/` for existing contact
+   - If NOT found, ask: "I don't have [Name] in contacts. Want me to create them? What's their main contact method (slack/discord/whatsapp/email)?"
+   - If user confirms, create contact FIRST in background at `knowledge-base/40-contacts/[name].md`
+
+3. **Infer and confirm**: Based on the task, INFER the following (then confirm with user):
    - **Owner**: Is this you or waiting on someone?
    - **Priority**: When does this realistically need to happen?
    - **Category**: Which area of life? (detect from context: Laku6 = engineering team, SeeDr/NoOn = client work, etc.)
@@ -41,7 +46,7 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
      - Project, initiative → 1w+
    - **Due date**: If there's an implicit deadline, infer it
 
-3. **Create the todo file**: Write to `knowledge-base/20-todos/[slug].md` using the template:
+4. **Create the todo file**: Write to `knowledge-base/20-todos/[slug].md` using the template:
    ```markdown
    ---
    created: [today's date]
@@ -71,7 +76,8 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
    ## Notes
    ```
 
-4. **Enrich with context**: Search for and include:
+5. **Enrich with context**: Search for and include:
+   - Link to contact if person mentioned: `[[40-contacts/name|Name]]`
    - Related notes in knowledge-base (use Grep/Glob)
    - Relevant resources from preferred sources:
      - Matt Mochary (The Great CEO Within, Mochary Method)
@@ -80,7 +86,7 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
      - Shishir Mehrotra (rituals, todo philosophy)
    - Use WebSearch to find specific resources if relevant
 
-5. **Confirm creation**: Show the created todo and file path
+6. **Confirm creation**: Show the created todo and file path (and contact if created)
 
 ## Preferred Sources for Context
 
@@ -119,5 +125,19 @@ User: "waiting for legal review from Carousell on the new contract"
 - Priority: this-week
 - Category: 4 (Laku6 - Carousell subsidiary)
 - Estimate: N/A (waiting)
+
+---
+
+User: "follow up with Irvan about the API integration"
+
+**Contact check:** Irvan not found in contacts.
+
+Claude: "I don't have Irvan in contacts. Want me to create them? What's their main contact method?"
+
+User: "yes, slack"
+
+**Created:**
+1. Contact: `knowledge-base/40-contacts/irvan.md` (primary: slack)
+2. Todo: `knowledge-base/20-todos/followup-irvan-api.md` with link to [[40-contacts/irvan|Irvan]]
 
 Start by asking: "What do you need to do?"

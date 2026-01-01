@@ -3,6 +3,7 @@
 10-notes/*
 20-todos/*
 30-habits/*
+40-contacts/*
 daily/*
 
 # Keep the folders themselves
@@ -10,6 +11,7 @@ daily/*
 !10-notes/.gitkeep
 !20-todos/.gitkeep
 !30-habits/.gitkeep
+!40-contacts/.gitkeep
 !daily/.gitkeep
 
 # Keep dashboard
