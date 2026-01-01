@@ -75,6 +75,12 @@ livesync-logs:
 livesync-init:
 	@echo "Initializing CouchDB database for LiveSync..."
 	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/obsidian-livesync
-	@echo "\nDatabase created. Configure your Obsidian LiveSync plugin with:"
-	@echo "  URI: https://your-server.com/couchdb"
+	@echo "\nConfiguring CORS..."
+	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/chttpd/enable_cors -d '"true"'
+	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/origins -d '"app://obsidian.md,capacitor://localhost,http://localhost"'
+	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/credentials -d '"true"'
+	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/methods -d '"GET, PUT, POST, HEAD, DELETE"'
+	@curl -X PUT http://admin:$${COUCHDB_PASSWORD}@127.0.0.1:5984/_node/_local/_config/cors/headers -d '"accept, authorization, content-type, origin, referer"'
+	@echo "\nDone. Configure your Obsidian LiveSync plugin with:"
+	@echo "  URI: http://YOUR_SERVER_IP:5984"
 	@echo "  Database: obsidian-livesync"
