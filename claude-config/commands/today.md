@@ -81,9 +81,9 @@ Gather everything that can be cleared quickly.
 **IMPORTANT: Run ALL data fetches in parallel (single message with multiple tool calls):**
 
 Execute these simultaneously:
-1. `gh pr list --repo AidenSb/AIDR --search "review-requested:@me" --state open`
-2. `gh pr list --repo AidenSb/noon --search "review-requested:@me" --state open`
-3. `gh pr list --repo AidenSb/laku6 --search "review-requested:@me" --state open`
+1. `gh search prs --review-requested=@me --state=open` (all orgs)
+2. `gh pr list --repo AidenSb/reallysick-monorepo --search "review-requested:@me" --state open`
+3. `gh pr list --repo AidenSb/noon-monorepo --search "review-requested:@me" --state open`
 4. `mcp__seedr-linear__list_issues` with assignee: "me"
 5. `mcp__noon-linear__list_issues` with assignee: "me"
 6. Grep for todos with `estimate: 15m` or `estimate: 30m` in `knowledge-base/20-todos/`
