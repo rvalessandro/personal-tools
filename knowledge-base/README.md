@@ -13,3 +13,13 @@ Personal Obsidian vault for notes, todos, and habit tracking.
 ## Usage
 
 Open this folder as an Obsidian vault. Templates are available in the `templates/` folder for creating new notes.
+
+## Claude Code Integration
+
+Since this vault is in the same repo, Claude Code has native access to all files. No MCP server needed.
+
+**Example prompts:**
+- "List all notes in knowledge-base/00-inbox"
+- "Create a new note in knowledge-base/00-inbox"
+- "Search for 'project' in knowledge-base"
+- "Read my todo template"
