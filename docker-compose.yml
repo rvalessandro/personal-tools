@@ -20,7 +20,7 @@ services:
       - couchdb-data:/opt/couchdb/data
       - ./livesync/couchdb.ini:/opt/couchdb/etc/local.d/local.ini:ro
     ports:
-      - "127.0.0.1:5984:5984"
+      - "5984:5984"
     profiles:
       - livesync
 
