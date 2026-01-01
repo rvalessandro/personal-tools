@@ -33,6 +33,5 @@ CATEGORY (numbered for muscle memory):
   2: SeeDr (fractional CTO)
   3: NoOn (fractional CTO)
   4: Laku6 (Head of Engineering)
-  7: Advisory/Investments
   8: Personal (family, health, social)
 -->

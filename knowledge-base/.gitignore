@@ -1,0 +1,11 @@
+# Ignore content folders (synced by Syncthing, not git)
+00-inbox/*
+10-notes/*
+20-todos/*
+30-habits/*
+
+# Keep the folders themselves
+!00-inbox/.gitkeep
+!10-notes/.gitkeep
+!20-todos/.gitkeep
+!30-habits/.gitkeep
