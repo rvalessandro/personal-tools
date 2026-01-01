@@ -8,6 +8,12 @@ REPO_DIR="$(dirname "$KB_DIR")"
 
 cd "$REPO_DIR"
 
+# Ensure correct ownership (fixes sudo git issues)
+CURRENT_USER="${SUDO_USER:-$USER}"
+if [[ -n "$CURRENT_USER" && "$CURRENT_USER" != "root" ]]; then
+    chown -R "$CURRENT_USER:$CURRENT_USER" "$KB_DIR" 2>/dev/null || true
+fi
+
 # Pull first
 git pull --rebase 2>/dev/null || git rebase --abort 2>/dev/null || true
 
