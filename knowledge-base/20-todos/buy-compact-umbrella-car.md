@@ -8,7 +8,7 @@ priority: this-week
 category: 8
 estimate: 15m
 due:
-status: pending
+status: done
 tags: [personal, car, shopping]
 ---
 
