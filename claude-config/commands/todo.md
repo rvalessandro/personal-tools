@@ -123,7 +123,7 @@ User: "waiting for legal review from Carousell on the new contract"
 - Delegated to: Carousell Legal
 - Delegated what: Contract review
 - Priority: this-week
-- Category: 4 (Laku6 - Carousell subsidiary)
+- Category: 4 (sys: Carousell/Lk6)
 - Estimate: N/A (waiting)
 
 ---
