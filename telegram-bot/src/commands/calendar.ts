@@ -125,10 +125,10 @@ Return ONLY the JSON, nothing else.`;
       return;
     }
 
-    // Parse optional account name and days
+    // Parse optional account name and days (default 2 = today + tomorrow)
     const parts = text.split(/\s+/);
     let accountName = accounts[0];
-    let days = 7;
+    let days = 2;
 
     for (const part of parts) {
       if (accounts.includes(part.toLowerCase())) {
@@ -145,9 +145,9 @@ Return ONLY the JSON, nothing else.`;
 
       if (result.success && result.events) {
         if (result.events.length === 0) {
-          ctx.reply(`No events in next ${days} days on ${accountName}`);
+          ctx.reply(`No events for today/tomorrow on ${accountName}`);
         } else {
-          ctx.reply(`📅 ${accountName} (next ${days} days):\n\n${result.events.join("\n")}`);
+          ctx.reply(`📅 ${accountName}:\n\n${result.events.join("\n")}`);
         }
       } else {
         ctx.reply(`❌ ${result.message}`);

@@ -199,29 +199,69 @@ export class CalendarService {
         },
       });
 
-      const events: string[] = [];
+      interface ParsedEvent {
+        date: Date;
+        summary: string;
+      }
+
+      const parsedEvents: ParsedEvent[] = [];
+
       for (const obj of calendarObjects) {
         if (obj.data) {
-          // Basic parsing - extract SUMMARY and DTSTART
+          // Extract SUMMARY
           const summaryMatch = obj.data.match(/SUMMARY:(.+)/);
-          const startMatch = obj.data.match(/DTSTART[^:]*:(\d+T\d+)/);
-          if (summaryMatch && startMatch) {
-            const summary = summaryMatch[1].trim();
-            const dateStr = startMatch[1];
-            // Format: 20260102T150000
-            const year = dateStr.slice(0, 4);
-            const month = dateStr.slice(4, 6);
-            const day = dateStr.slice(6, 8);
-            const hour = dateStr.slice(9, 11);
-            const min = dateStr.slice(11, 13);
-            events.push(`${month}/${day} ${hour}:${min} - ${summary}`);
+          if (!summaryMatch) continue;
+          const summary = summaryMatch[1].trim();
+
+          // Extract DTSTART - handle various formats
+          // DTSTART:20260102T150000Z (UTC)
+          // DTSTART:20260102T150000 (local)
+          // DTSTART;TZID=Asia/Jakarta:20260102T150000
+          const startMatch = obj.data.match(/DTSTART[^:]*:(\d{8}T\d{6})(Z)?/);
+          if (!startMatch) continue;
+
+          const dateStr = startMatch[1];
+          const isUTC = startMatch[2] === "Z";
+
+          // Parse: 20260102T150000
+          const year = parseInt(dateStr.slice(0, 4));
+          const month = parseInt(dateStr.slice(4, 6)) - 1;
+          const day = parseInt(dateStr.slice(6, 8));
+          const hour = parseInt(dateStr.slice(9, 11));
+          const min = parseInt(dateStr.slice(11, 13));
+
+          let eventDate: Date;
+          if (isUTC) {
+            eventDate = new Date(Date.UTC(year, month, day, hour, min));
+          } else {
+            eventDate = new Date(year, month, day, hour, min);
           }
+
+          parsedEvents.push({ date: eventDate, summary });
         }
       }
 
+      // Sort by date
+      parsedEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      // Format for display
+      const events = parsedEvents.map((e) => {
+        const dateStr = e.date.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
+        const timeStr = e.date.toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+        return `${dateStr} ${timeStr} - ${e.summary}`;
+      });
+
       return {
         success: true,
-        message: `Found ${events.length} events in next ${daysAhead} days`,
+        message: `Found ${events.length} events`,
         events,
       };
     } catch (error) {
