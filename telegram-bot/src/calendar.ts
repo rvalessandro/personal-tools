@@ -188,16 +188,26 @@ export class CalendarService {
         ? `https://calendar.google.com/calendar/dav/${account.calendarId}/events/`
         : `https://calendar.google.com/calendar/dav/${account.email}/events/`;
 
-      // Use Jakarta timezone for date calculations
+      // Use Jakarta timezone (UTC+7) for date calculations
       const tz = "Asia/Jakarta";
+      const jakartaOffsetMs = 7 * 60 * 60 * 1000; // UTC+7 in milliseconds
       const now = new Date();
-      const jakartaDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+      const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+      const jakartaMs = utcMs + jakartaOffsetMs;
 
-      const start = new Date(jakartaDate);
-      start.setHours(0, 0, 0, 0); // Start of today in Jakarta
-      const end = new Date(jakartaDate);
-      end.setDate(end.getDate() + daysAhead);
-      end.setHours(23, 59, 59, 999); // End of last day in Jakarta
+      // Get Jakarta date components
+      const jakartaNow = new Date(jakartaMs);
+      const year = jakartaNow.getUTCFullYear();
+      const month = jakartaNow.getUTCMonth();
+      const day = jakartaNow.getUTCDate();
+
+      // Start of today in Jakarta (convert back to UTC for query)
+      const startJakarta = new Date(Date.UTC(year, month, day, 0, 0, 0));
+      const start = new Date(startJakarta.getTime() - jakartaOffsetMs);
+
+      // End of range in Jakarta
+      const endJakarta = new Date(Date.UTC(year, month, day + daysAhead, 23, 59, 59));
+      const end = new Date(endJakarta.getTime() - jakartaOffsetMs);
 
       const calendarObjects = await client.fetchCalendarObjects({
         calendar: { url: calendarUrl },
