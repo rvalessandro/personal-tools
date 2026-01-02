@@ -6,5 +6,6 @@
 .DS_Store
 Thumbs.db
 
-# Sync conflicts (just in case)
+# Sync conflicts
 *.sync-conflict-*
+.sync-conflict
