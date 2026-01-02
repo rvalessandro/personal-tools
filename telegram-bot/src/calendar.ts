@@ -235,50 +235,96 @@ export class CalendarService {
       const parsedEvents: ParsedEvent[] = [];
       const seenEvents = new Set<string>(); // For deduplication
 
-
-      // Helper to parse DTSTART into Date (from VEVENT block only)
-      const parseDTSTART = (data: string): { date: Date; isAllDay: boolean } | null => {
-        // Extract VEVENT block to avoid matching VTIMEZONE's DTSTART
-        const veventMatch = data.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/);
-        if (!veventMatch) return null;
-        const vevent = veventMatch[0];
-
-        // Find DTSTART line within VEVENT
-        const dtstartLine = vevent.match(/DTSTART[^\r\n]*/)?.[0] || "";
-        const startMatch = dtstartLine.match(/:(\d{8})(T(\d{6}))?(Z)?$/);
-        if (!startMatch) return null;
-
-        const datePart = startMatch[1];
-        const timePart = startMatch[3] || "000000";
-        const isUTC = startMatch[4] === "Z";
-        const isAllDay = !startMatch[3]; // No time = all day event
-
-        const evtYear = parseInt(datePart.slice(0, 4));
-        const evtMonth = parseInt(datePart.slice(4, 6));
-        const evtDay = parseInt(datePart.slice(6, 8));
-        const hour = parseInt(timePart.slice(0, 2));
-        const min = parseInt(timePart.slice(2, 4));
-
-        let date: Date;
-        if (isUTC) {
-          date = new Date(Date.UTC(evtYear, evtMonth - 1, evtDay, hour, min));
-        } else {
-          // Assume Jakarta timezone
-          const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`;
-          date = new Date(isoStr);
-        }
-        return { date, isAllDay };
+      // Helper to extract all VEVENTs from a calendar object
+      const extractVevents = (data: string): string[] => {
+        const unfoldedData = data.replace(/\r?\n[ \t]/g, "");
+        const matches = unfoldedData.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g);
+        return matches || [];
       };
 
-      for (const obj of calendarObjects) {
-        if (obj.data) {
-          // Unfold iCal content (lines starting with space/tab are continuations)
-          const unfoldedData = obj.data.replace(/\r?\n[ \t]/g, "");
+      // First pass: collect all override events (those with RECURRENCE-ID)
+      // These override specific instances of recurring events
+      const overrides = new Map<string, { vevent: string; summary: string; date: Date; status: EventStatus }>();
 
-          // Extract VEVENT block
-          const veventMatch = unfoldedData.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/);
-          if (!veventMatch) continue;
-          const vevent = veventMatch[0];
+      for (const obj of calendarObjects) {
+        if (!obj.data) continue;
+        const vevents = extractVevents(obj.data);
+
+        for (const vevent of vevents) {
+
+        // Check for RECURRENCE-ID (this is an override of a recurring instance)
+        const recurrenceIdMatch = vevent.match(/RECURRENCE-ID[^:]*:(\d{8})(T(\d{6}))?(Z)?/);
+        if (!recurrenceIdMatch) continue;
+
+        const uidMatch = vevent.match(/UID:(.+)/);
+        const uid = uidMatch ? uidMatch[1].trim() : "";
+        if (!uid) continue;
+
+        // Parse the recurrence-id date
+        const datePart = recurrenceIdMatch[1];
+        const timePart = recurrenceIdMatch[3] || "000000";
+        const isUTC = recurrenceIdMatch[4] === "Z";
+
+        const y = parseInt(datePart.slice(0, 4));
+        const m = parseInt(datePart.slice(4, 6));
+        const d = parseInt(datePart.slice(6, 8));
+        const h = parseInt(timePart.slice(0, 2));
+        const min = parseInt(timePart.slice(2, 4));
+
+        let recDate: Date;
+        if (isUTC) {
+          recDate = new Date(Date.UTC(y, m - 1, d, h, min));
+        } else {
+          recDate = new Date(`${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`);
+        }
+
+        // Extract summary and status for the override
+        const summaryMatch = vevent.match(/SUMMARY:(.+)/);
+        const summary = summaryMatch ? summaryMatch[1].trim() : "";
+
+        let status: EventStatus = "accepted";
+        const attendeeRegex = new RegExp(
+          `ATTENDEE[^\\r\\n]*PARTSTAT=(ACCEPTED|DECLINED|NEEDS-ACTION|TENTATIVE)[^\\r\\n]*${account.email}`,
+          "i"
+        );
+        const attendeeMatch = vevent.match(attendeeRegex);
+        if (attendeeMatch) {
+          status = attendeeMatch[1].toLowerCase() as EventStatus;
+        }
+
+        // Parse the actual DTSTART of the override (may be different time)
+        const dtstartMatch = vevent.match(/DTSTART[^:]*:(\d{8})(T(\d{6}))?(Z)?/);
+        let overrideDate = recDate;
+        if (dtstartMatch) {
+          const dp = dtstartMatch[1];
+          const tp = dtstartMatch[3] || "000000";
+          const utc = dtstartMatch[4] === "Z";
+          const oy = parseInt(dp.slice(0, 4));
+          const om = parseInt(dp.slice(4, 6));
+          const od = parseInt(dp.slice(6, 8));
+          const oh = parseInt(tp.slice(0, 2));
+          const omin = parseInt(tp.slice(2, 4));
+          if (utc) {
+            overrideDate = new Date(Date.UTC(oy, om - 1, od, oh, omin));
+          } else {
+            overrideDate = new Date(`${oy}-${String(om).padStart(2, "0")}-${String(od).padStart(2, "0")}T${String(oh).padStart(2, "0")}:${String(omin).padStart(2, "0")}:00+07:00`);
+          }
+        }
+
+        // Key by UID + original recurrence date (to match against expanded instances)
+        const overrideKey = `${uid}-${recDate.toISOString().slice(0, 10)}`;
+        overrides.set(overrideKey, { vevent, summary, date: overrideDate, status });
+        }
+      }
+
+      for (const obj of calendarObjects) {
+        if (!obj.data) continue;
+
+        const vevents = extractVevents(obj.data);
+
+        for (const vevent of vevents) {
+          // Skip events with RECURRENCE-ID (already processed as overrides)
+          if (vevent.match(/RECURRENCE-ID/)) continue;
 
           // Extract UID for deduplication
           const uidMatch = vevent.match(/UID:(.+)/);
@@ -300,10 +346,29 @@ export class CalendarService {
             status = attendeeMatch[1].toLowerCase() as EventStatus;
           }
 
-          // Parse DTSTART
-          const dtstartResult = parseDTSTART(unfoldedData);
-          if (!dtstartResult) continue;
-          const { date: masterDate, isAllDay } = dtstartResult;
+          // Parse DTSTART from this VEVENT
+          const dtstartLine = vevent.match(/DTSTART[^\r\n]*/)?.[0] || "";
+          const startMatch = dtstartLine.match(/:(\d{8})(T(\d{6}))?(Z)?$/);
+          if (!startMatch) continue;
+
+          const datePart = startMatch[1];
+          const timePart = startMatch[3] || "000000";
+          const isUTC = startMatch[4] === "Z";
+          const isAllDay = !startMatch[3];
+
+          const evtYear = parseInt(datePart.slice(0, 4));
+          const evtMonth = parseInt(datePart.slice(4, 6));
+          const evtDay = parseInt(datePart.slice(6, 8));
+          const hour = parseInt(timePart.slice(0, 2));
+          const min = parseInt(timePart.slice(2, 4));
+
+          let masterDate: Date;
+          if (isUTC) {
+            masterDate = new Date(Date.UTC(evtYear, evtMonth - 1, evtDay, hour, min));
+          } else {
+            const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`;
+            masterDate = new Date(isoStr);
+          }
 
           // Check for RRULE (recurring event)
           const rruleMatch = vevent.match(/RRULE:([^\r\n]+)/);
@@ -332,9 +397,21 @@ export class CalendarService {
               const instances = rule.between(start, end, true);
 
               for (const instance of instances) {
-                let eventDate: Date;
+                // Check if this instance has an override
+                const instanceDateStr = instance.toISOString().slice(0, 10);
+                const overrideKey = `${uid}-${instanceDateStr}`;
+                const override = overrides.get(overrideKey);
 
-                if (isAllDay) {
+                let eventDate: Date;
+                let eventSummary = summary;
+                let eventStatus = status;
+
+                if (override) {
+                  // Use override data
+                  eventDate = override.date;
+                  eventSummary = override.summary;
+                  eventStatus = override.status;
+                } else if (isAllDay) {
                   // All-day events: use midnight Jakarta
                   const y = instance.getUTCFullYear();
                   const m = instance.getUTCMonth() + 1;
@@ -358,7 +435,7 @@ export class CalendarService {
                 if (seenEvents.has(dedupeKey)) continue;
                 seenEvents.add(dedupeKey);
 
-                parsedEvents.push({ date: eventDate, summary, status, uid });
+                parsedEvents.push({ date: eventDate, summary: eventSummary, status: eventStatus, uid });
               }
             } catch {
               // RRULE parsing failed, skip this recurring event
