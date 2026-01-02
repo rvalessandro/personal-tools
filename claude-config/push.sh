@@ -8,9 +8,11 @@ CLAUDE_DIR="$HOME/.claude"
 
 echo "=== Syncing Claude Config ==="
 
-# Load .env if exists
+# Load .env if exists (use set -a to auto-export)
 if [ -f "$REPO_DIR/.env" ]; then
-  export $(grep -v '^#' "$REPO_DIR/.env" | xargs)
+  set -a
+  source "$REPO_DIR/.env"
+  set +a
 fi
 
 # Create directories
