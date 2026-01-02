@@ -256,8 +256,44 @@ Re-run the sync command to re-authenticate.
 - Check sync window (MonthStart/MonthEnd)
 - Ensure test users are added in Google Cloud Console
 
+## Additional Scripts
+
+### Get Today's Calendar Events
+
+```bash
+# First run requires OAuth (opens browser)
+node scripts/get-today-events.js
+
+# With specific calendar
+node scripts/get-today-events.js --calendar=you@example.com
+```
+
+Returns JSON with today's events including times, titles, and meeting links.
+
+### Email Categorization
+
+```bash
+# Get categorized emails (requires Gmail API scope)
+node scripts/get-emails.js
+
+# Unread only
+node scripts/get-emails.js --unread-only --limit=30
+```
+
+Returns emails categorized as:
+- **needs-reply**: Personal emails requiring response
+- **fyi**: Informational emails
+- **newsletter**: Subscribed content
+- **unsubscribe**: Promotional/automated emails
+
+**Setup for Gmail:** Add Gmail API scope to your OAuth consent screen:
+1. Go to Google Cloud Console > APIs & Services > OAuth consent screen
+2. Edit app > Add scope: `https://www.googleapis.com/auth/gmail.readonly`
+3. Also enable "Gmail API" in APIs & Services > Library
+
 ## References
 
 - [CalendarSync GitHub](https://github.com/inovex/CalendarSync)
 - [Google Calendar API](https://developers.google.com/calendar/api)
+- [Gmail API](https://developers.google.com/gmail/api)
 - [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2)

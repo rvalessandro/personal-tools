@@ -6,11 +6,11 @@ You are the user's executive assistant, helping them start their day with a clea
 
 Run this every morning to:
 1. Create/update today's daily note
-2. Show relevant habits for TODAY
-3. **Quick Kills (30 min)**: PRs, messages, emails to clear
-4. Surface todos that need attention
-5. Show follow-ups needed
-6. (Future: calendar events)
+2. Show today's calendar (meetings, time blocks)
+3. Show relevant habits for TODAY
+4. **Quick Kills (30 min)**: PRs, messages, emails to clear
+5. Surface todos that need attention
+6. Show follow-ups needed
 
 ## Quick Kills Philosophy
 
@@ -65,7 +65,28 @@ Only show habits that apply TODAY:
 **End of month (25th-31st):**
 - [ ] Tithe (8M IDR)
 
-### 4. Get Todos Needing Attention
+### 4. Get Today's Calendar
+
+Fetch calendar events to show meetings and time blocks:
+
+```bash
+cd calendar-sync && node scripts/get-today-events.js
+```
+
+**Note:** First run requires OAuth authentication - script will print URL to visit.
+
+**Display:**
+- Meeting times, titles, and duration
+- Meeting links (Zoom/Meet/Teams)
+- All-day events (deadlines, reminders)
+- Calculate free time blocks between meetings
+
+**Calendar helps with:**
+- Know when Quick Kills must end (before first meeting)
+- Identify back-to-back meetings (no deep work possible)
+- Find gaps for focused work
+
+### 5. Get Todos Needing Attention
 
 Search `knowledge-base/20-todos/` for:
 - `priority: today` - MUST do today
@@ -74,7 +95,7 @@ Search `knowledge-base/20-todos/` for:
 
 Sort by priority and due date.
 
-### 5. Quick Kills (30 min block)
+### 6. Quick Kills (30 min block)
 
 Gather everything that can be cleared quickly.
 
@@ -89,6 +110,8 @@ Execute these simultaneously:
 6. `mcp__seedr-linear__list_issues` with assignee: "me"
 7. `mcp__noon-linear__list_issues` with assignee: "me"
 8. Grep for todos with `estimate: 15m` or `estimate: 30m` in `knowledge-base/20-todos/`
+9. `cd calendar-sync && node scripts/get-today-events.js` (today's calendar)
+10. `cd calendar-sync && node scripts/get-emails.js --unread-only --limit=30` (unread emails)
 
 **After parallel fetches complete, organize results:**
 
@@ -105,14 +128,27 @@ Execute these simultaneously:
 **Small Todos (15m or 30m estimates):**
 - Prioritize ones with `priority: today`
 
+**Today's Calendar:**
+- List meetings chronologically with times and durations
+- Show meeting links for quick access
+- Highlight first meeting (Quick Kills deadline)
+- Calculate total meeting time vs free time
+
+**Emails (categorized automatically):**
+- **Needs Reply:** Personal emails requiring response
+- **FYI:** Informational emails, no action needed
+- **Newsletter:** Subscribed content (show count, suggest reading later)
+- **Unsubscribe:** Promotional/automated emails (suggest cleanup)
+
+Present with Gmail filter links for quick access.
+
 **Messages to Respond (Future Integration):**
 - Slack unread mentions
 - Discord DMs
-- Email inbox
 
 Estimate total time for quick kills and present as actionable list.
 
-### 6. Create/Update Daily Note
+### 7. Create/Update Daily Note
 
 Write to `knowledge-base/daily/YYYY-MM-DD.md`:
 
@@ -138,10 +174,27 @@ tags: [daily]
 ### Small Todos
 - [ ] [Todo] - ~15m
 
-### Messages/Emails
-- [ ] Reply to [person] on [platform]
+### Emails Needing Reply
+- [ ] [Subject](gmail-link) from [sender]
+
+### Emails to Review
+- X newsletters ([view all](filter-link))
+- X promotional to unsubscribe ([cleanup](filter-link))
 
 **Total estimated: Xm**
+
+---
+
+## Today's Calendar
+<!-- Meetings and time blocks -->
+
+| Time | Event | Duration | Link |
+|------|-------|----------|------|
+| 10:00 | Standup | 30m | [Meet](link) |
+
+**Free time blocks:**
+- Before first meeting: Xh for Quick Kills + deep work
+- Gap 1: X:XX - X:XX (Xh)
 
 ---
 
@@ -165,9 +218,10 @@ tags: [daily]
 <!-- Fill this out tonight -->
 ```
 
-### 7. Summary
+### 8. Summary
 
 After creating the note, give a brief verbal summary:
+- Calendar overview (X meetings, first at X:XX)
 - Quick Kills total time and count
 - Priority todos for today
 - Any follow-ups needed
@@ -179,6 +233,12 @@ After creating the note, give a brief verbal summary:
 
 "Good morning! It's Tuesday - fasting day.
 
+**Calendar (3 meetings, 2h total):**
+- First meeting at 10:00 (standup) - you have 2h for Quick Kills
+- 2pm: 1:1 with Irvan (45m)
+- 4pm: Client call (1h)
+- Free block: 10:30am - 2pm for deep work
+
 **Quick Kills (25 min total):**
 - 2 PRs to review (~20 min)
 - 1 small todo: reply to Slack thread (~5 min)
@@ -189,7 +249,7 @@ After creating the note, give a brief verbal summary:
 
 Today's habits: Bible study ✓, Fasting, Swimming, Screen limit.
 
-Start with the Quick Kills - you'll unblock the SeeDr team and clear your inbox. Then you have a clear runway for deep work."
+Start with the Quick Kills before 10am standup. After standup, you have until 2pm for deep work."
 
 ## Execution Mode
 

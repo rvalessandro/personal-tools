@@ -9,5 +9,8 @@ config/systeric-to-laku6.yaml
 # Auth tokens
 data/
 
+# Node
+node_modules/
+
 # Keep examples
 !config/*.example
