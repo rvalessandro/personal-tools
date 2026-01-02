@@ -11,6 +11,9 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
+      rrule:
+        specifier: ^2.8.1
+        version: 2.8.1
       telegraf:
         specifier: ^4.16.3
         version: 4.16.3
@@ -523,6 +526,9 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rrule@2.8.1:
+    resolution: {integrity: sha512-hM3dHSBMeaJ0Ktp7W38BJZ7O1zOgaFEsn41PDk+yHoEtfLV+PoJt9E9xAlZiWgf/iqEqionN0ebHFZIDAp+iGw==}
+
   safe-compare@1.1.4:
     resolution: {integrity: sha512-b9wZ986HHCo/HbKrRpBJb2kqXMK9CEWIE1egeEvZsYn69ay3kdfl9nG3RyOcR+jInTDf7a86WQ1d4VJX7goSSQ==}
 
@@ -574,6 +580,9 @@ packages:
   tsdav@2.1.6:
     resolution: {integrity: sha512-ngZCuhQvNClm5YHbuKN7EmRhOpu1XmsJ2+d56rpeiW9ZvXIxtDWyOf8TEojEgrgZVca9XJglVFNHYtyjQSmYOA==}
     engines: {node: '>=10'}
+
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
   tsup@8.5.1:
     resolution: {integrity: sha512-xtgkqwdhpKWr3tKPmCkvYmS9xnQK3m3XgxZHwSUjvfTjp7YfXe5tT3GgWi0F2N+ZSMsOeWeZFh7ZZFg5iPhing==}
@@ -981,6 +990,10 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.54.0
       fsevents: 2.3.3
 
+  rrule@2.8.1:
+    dependencies:
+      tslib: 2.8.1
+
   safe-compare@1.1.4:
     dependencies:
       buffer-alloc: 1.2.0
@@ -1045,6 +1058,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  tslib@2.8.1: {}
 
   tsup@8.5.1(tsx@4.21.0)(typescript@5.9.3):
     dependencies:

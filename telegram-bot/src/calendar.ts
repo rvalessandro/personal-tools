@@ -1,5 +1,7 @@
 import { createDAVClient, DAVClient } from "tsdav";
 import { v4 as uuidv4 } from "uuid";
+import rrule from "rrule";
+const { RRule } = rrule;
 
 // Calendar account configuration
 export interface CalendarAccount {
@@ -233,93 +235,147 @@ export class CalendarService {
       const parsedEvents: ParsedEvent[] = [];
       const seenEvents = new Set<string>(); // For deduplication
 
-      console.log(`[Calendar] Query range: ${start.toISOString()} to ${end.toISOString()}`);
-      console.log(`[Calendar] Found ${calendarObjects.length} calendar objects`);
+
+      // Helper to parse DTSTART into Date (from VEVENT block only)
+      const parseDTSTART = (data: string): { date: Date; isAllDay: boolean } | null => {
+        // Extract VEVENT block to avoid matching VTIMEZONE's DTSTART
+        const veventMatch = data.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/);
+        if (!veventMatch) return null;
+        const vevent = veventMatch[0];
+
+        // Find DTSTART line within VEVENT
+        const dtstartLine = vevent.match(/DTSTART[^\r\n]*/)?.[0] || "";
+        const startMatch = dtstartLine.match(/:(\d{8})(T(\d{6}))?(Z)?$/);
+        if (!startMatch) return null;
+
+        const datePart = startMatch[1];
+        const timePart = startMatch[3] || "000000";
+        const isUTC = startMatch[4] === "Z";
+        const isAllDay = !startMatch[3]; // No time = all day event
+
+        const evtYear = parseInt(datePart.slice(0, 4));
+        const evtMonth = parseInt(datePart.slice(4, 6));
+        const evtDay = parseInt(datePart.slice(6, 8));
+        const hour = parseInt(timePart.slice(0, 2));
+        const min = parseInt(timePart.slice(2, 4));
+
+        let date: Date;
+        if (isUTC) {
+          date = new Date(Date.UTC(evtYear, evtMonth - 1, evtDay, hour, min));
+        } else {
+          // Assume Jakarta timezone
+          const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`;
+          date = new Date(isoStr);
+        }
+        return { date, isAllDay };
+      };
 
       for (const obj of calendarObjects) {
         if (obj.data) {
-          // Debug: log first event's raw data
-          if (parsedEvents.length === 0) {
-            console.log(`[Calendar] Sample raw iCal:\n${obj.data.substring(0, 500)}`);
-          }
+          // Unfold iCal content (lines starting with space/tab are continuations)
+          const unfoldedData = obj.data.replace(/\r?\n[ \t]/g, "");
+
+          // Extract VEVENT block
+          const veventMatch = unfoldedData.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/);
+          if (!veventMatch) continue;
+          const vevent = veventMatch[0];
+
           // Extract UID for deduplication
-          const uidMatch = obj.data.match(/UID:(.+)/);
+          const uidMatch = vevent.match(/UID:(.+)/);
           const uid = uidMatch ? uidMatch[1].trim() : "";
 
           // Extract SUMMARY
-          const summaryMatch = obj.data.match(/SUMMARY:(.+)/);
+          const summaryMatch = vevent.match(/SUMMARY:(.+)/);
           if (!summaryMatch) continue;
           const summary = summaryMatch[1].trim();
 
-          // Extract DTSTART - handle various formats
-          // DTSTART:20260102T150000Z (UTC)
-          // DTSTART:20260102T150000 (local, assume Jakarta)
-          // DTSTART;TZID=Asia/Jakarta:20260102T150000
-          // DTSTART;VALUE=DATE:20260102 (all-day event)
-          const startMatch = obj.data.match(/DTSTART[^:]*:(\d{8})(T(\d{6}))?(Z)?/);
-          if (!startMatch) continue;
-
-          const datePart = startMatch[1]; // 20260102
-          const timePart = startMatch[3] || "000000"; // 150000 or default midnight
-          const isUTC = startMatch[4] === "Z";
-
-          // Check if there's a TZID specified
-          const tzidMatch = obj.data.match(/DTSTART;[^:]*TZID=([^:;]+)/);
-          const eventTz = tzidMatch ? tzidMatch[1] : null;
-
-          // Parse date/time components
-          const evtYear = parseInt(datePart.slice(0, 4));
-          const evtMonth = parseInt(datePart.slice(4, 6));
-          const evtDay = parseInt(datePart.slice(6, 8));
-          const hour = parseInt(timePart.slice(0, 2));
-          const min = parseInt(timePart.slice(2, 4));
-
-          let eventDate: Date;
-          if (isUTC) {
-            eventDate = new Date(Date.UTC(evtYear, evtMonth - 1, evtDay, hour, min));
-          } else if (eventTz) {
-            // Parse with specific timezone
-            const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`;
-            // Create date assuming the timezone offset
-            if (eventTz.includes("Jakarta") || eventTz.includes("+07")) {
-              eventDate = new Date(isoStr + "+07:00");
-            } else {
-              // Fallback: treat as local Jakarta time
-              eventDate = new Date(isoStr + "+07:00");
-            }
-          } else {
-            // No timezone specified, assume Jakarta
-            const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`;
-            eventDate = new Date(isoStr);
-          }
-
-          // Dedupe by UID + date
-          const dedupeKey = `${uid}-${eventDate.toISOString()}`;
-          if (seenEvents.has(dedupeKey)) continue;
-          seenEvents.add(dedupeKey);
-
-          // Extract participation status from ATTENDEE line matching account email
-          // ATTENDEE;PARTSTAT=ACCEPTED;CN=Name:mailto:email@example.com
-          let status: EventStatus = "accepted"; // Default for events you created
+          // Extract participation status
+          let status: EventStatus = "accepted";
           const attendeeRegex = new RegExp(
-            `ATTENDEE[^:]*PARTSTAT=(ACCEPTED|DECLINED|NEEDS-ACTION|TENTATIVE)[^:]*:mailto:${account.email}`,
+            `ATTENDEE[^\\r\\n]*PARTSTAT=(ACCEPTED|DECLINED|NEEDS-ACTION|TENTATIVE)[^\\r\\n]*${account.email}`,
             "i"
           );
-          const attendeeMatch = obj.data.match(attendeeRegex);
+          const attendeeMatch = vevent.match(attendeeRegex);
           if (attendeeMatch) {
             status = attendeeMatch[1].toLowerCase() as EventStatus;
           }
 
-          // Debug: log parsed event
-          if (parsedEvents.length < 3) {
-            console.log(`[Calendar] Parsed: "${summary}" at ${eventDate.toISOString()} (status: ${status})`);
-          }
+          // Parse DTSTART
+          const dtstartResult = parseDTSTART(unfoldedData);
+          if (!dtstartResult) continue;
+          const { date: masterDate, isAllDay } = dtstartResult;
 
-          parsedEvents.push({ date: eventDate, summary, status, uid });
+          // Check for RRULE (recurring event)
+          const rruleMatch = vevent.match(/RRULE:([^\r\n]+)/);
+
+          if (rruleMatch) {
+            // Recurring event - expand instances in our query range
+            try {
+              const rruleStr = rruleMatch[1];
+
+              // Get time components from master date (for preserving time in instances)
+              const masterHour = masterDate.getUTCHours();
+              const masterMin = masterDate.getUTCMinutes();
+
+              // Build RRule with just the date part (time will be added back after)
+              const dtStartForRule = new Date(Date.UTC(
+                masterDate.getUTCFullYear(),
+                masterDate.getUTCMonth(),
+                masterDate.getUTCDate(),
+                0, 0, 0
+              ));
+
+              // Parse RRULE and get occurrences in range
+              const rule = RRule.fromString(
+                `DTSTART:${dtStartForRule.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")}\nRRULE:${rruleStr}`
+              );
+              const instances = rule.between(start, end, true);
+
+              for (const instance of instances) {
+                let eventDate: Date;
+
+                if (isAllDay) {
+                  // All-day events: use midnight Jakarta
+                  const y = instance.getUTCFullYear();
+                  const m = instance.getUTCMonth() + 1;
+                  const d = instance.getUTCDate();
+                  eventDate = new Date(
+                    `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T00:00:00+07:00`
+                  );
+                } else {
+                  // Timed events: apply the master event's time to this instance date
+                  eventDate = new Date(Date.UTC(
+                    instance.getUTCFullYear(),
+                    instance.getUTCMonth(),
+                    instance.getUTCDate(),
+                    masterHour,
+                    masterMin
+                  ));
+                }
+
+                // Dedupe
+                const dedupeKey = `${uid}-${eventDate.toISOString()}`;
+                if (seenEvents.has(dedupeKey)) continue;
+                seenEvents.add(dedupeKey);
+
+                parsedEvents.push({ date: eventDate, summary, status, uid });
+              }
+            } catch {
+              // RRULE parsing failed, skip this recurring event
+            }
+          } else {
+            // Non-recurring event - check if it's in our range
+            if (masterDate >= start && masterDate <= end) {
+              const dedupeKey = `${uid}-${masterDate.toISOString()}`;
+              if (!seenEvents.has(dedupeKey)) {
+                seenEvents.add(dedupeKey);
+                parsedEvents.push({ date: masterDate, summary, status, uid });
+              }
+            }
+          }
         }
       }
 
-      console.log(`[Calendar] Total parsed events: ${parsedEvents.length}`);
 
       // Sort by date
       parsedEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
