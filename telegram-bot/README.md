@@ -28,9 +28,10 @@ make bot
 
 Examples:
 ```
-/cal Meeting with John tomorrow 3pm for 1h on work
+/cal Meeting with John tomorrow 3pm for 1h on systeric
 /cal Dentist Jan 15 2pm on personal
-/events work 7
+/cal Standup 9am on laku6
+/events systeric 7
 ```
 
 ### Calendar Setup
@@ -40,11 +41,14 @@ Examples:
 3. Add to `.env`:
 
 ```bash
-CALDAV_PERSONAL_EMAIL=you@gmail.com
+CALDAV_PERSONAL_EMAIL=ralessandro939@gmail.com
 CALDAV_PERSONAL_PASSWORD=xxxx-xxxx-xxxx-xxxx
 
-CALDAV_WORK_EMAIL=you@company.com
-CALDAV_WORK_PASSWORD=xxxx-xxxx-xxxx-xxxx
+CALDAV_SYSTERIC_EMAIL=andro@systeric.com
+CALDAV_SYSTERIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
+
+CALDAV_LAKU6_EMAIL=andro@laku6.com
+CALDAV_LAKU6_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
 ## Production (PM2)
