@@ -10,9 +10,14 @@ echo "=== Syncing Claude Config ==="
 
 # Load .env if exists (use set -a to auto-export)
 if [ -f "$REPO_DIR/.env" ]; then
+  echo "Loading .env from $REPO_DIR/.env"
   set -a
   source "$REPO_DIR/.env"
   set +a
+  echo "NOON_LINEAR_API_KEY=${NOON_LINEAR_API_KEY:+[set]}"
+  echo "SEEDR_LINEAR_API_KEY=${SEEDR_LINEAR_API_KEY:+[set]}"
+else
+  echo "Warning: No .env found at $REPO_DIR/.env"
 fi
 
 # Create directories
