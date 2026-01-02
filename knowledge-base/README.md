@@ -46,3 +46,21 @@ Since this vault is in the same repo, Claude Code has native access to all files
 **Slash commands:**
 - `/todo` - Create a new todo
 - `/today` - Morning briefing with habits, todos, and quick kills
+
+## Writing Style Guide
+
+When creating content for Andro (meeting notes, templates, docs):
+
+**Conversational, not formal:**
+- ❌ "Progress" → ✅ "What shipped this week?"
+- ❌ "Blockers" → ✅ "What's stuck or needs help?"
+- ❌ "Action Items" → ✅ "What needs doing"
+- ❌ "Support Needed" → ✅ (merged into "What's stuck")
+
+**Principles:**
+- Use natural questions instead of business jargon
+- Reduce mental overhead - make it obvious what to fill in
+- Avoid duplication (don't ask for same info twice)
+- Keep it casual and low-friction
+- Short, direct sentences without fluff
+- No unnecessary formality

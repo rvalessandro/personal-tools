@@ -17,3 +17,4 @@ tags: [contact]
 
 ## Notes
 
+Sales squad lead. Bi-weekly 1:1 every Friday 11:00 AM to discuss squad transition support and unblock issues.

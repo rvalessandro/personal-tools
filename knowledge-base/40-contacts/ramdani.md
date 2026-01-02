@@ -17,3 +17,4 @@ tags: [contact]
 
 ## Notes
 
+Supply squad lead. Bi-weekly 1:1 every Tuesday 2:00 PM to discuss squad transition support and unblock issues.
