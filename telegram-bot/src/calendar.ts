@@ -79,7 +79,7 @@ export class CalendarService {
 
     try {
       const client = await createDAVClient({
-        serverUrl: `https://apidata.googleusercontent.com/caldav/v2/${account.email}/`,
+        serverUrl: `https://calendar.google.com/calendar/dav/${account.email}/`,
         credentials: {
           username: account.email,
           password: account.password,
@@ -137,33 +137,16 @@ export class CalendarService {
       const client = await this.getClient(accountName);
       const account = this.accounts.get(accountName.toLowerCase())!;
 
-      // Get calendars for this account
-      const calendars = await client.fetchCalendars();
-
-      if (calendars.length === 0) {
-        return { success: false, message: "No calendars found for this account" };
-      }
-
-      // Find the right calendar (primary or specified)
-      let targetCalendar = calendars[0];
-      if (account.calendarId) {
-        const found = calendars.find((c) => c.url.includes(account.calendarId!));
-        if (found) {
-          targetCalendar = found;
-        }
-      } else {
-        // Try to find primary calendar
-        const primary = calendars.find((c) => c.url.includes(account.email));
-        if (primary) {
-          targetCalendar = primary;
-        }
-      }
+      // Use direct calendar URL (Google CalDAV discovery doesn't work well)
+      const calendarUrl = account.calendarId
+        ? `https://calendar.google.com/calendar/dav/${account.calendarId}/events/`
+        : `https://calendar.google.com/calendar/dav/${account.email}/events/`;
 
       const uid = uuidv4();
       const icsContent = this.createICSEvent(event, uid);
 
       await client.createCalendarObject({
-        calendar: targetCalendar,
+        calendar: { url: calendarUrl },
         filename: `${uid}.ics`,
         iCalString: icsContent,
       });
@@ -199,24 +182,17 @@ export class CalendarService {
       const client = await this.getClient(accountName);
       const account = this.accounts.get(accountName.toLowerCase())!;
 
-      const calendars = await client.fetchCalendars();
-      if (calendars.length === 0) {
-        return { success: false, message: "No calendars found" };
-      }
-
-      // Find target calendar
-      let targetCalendar = calendars[0];
-      const primary = calendars.find((c) => c.url.includes(account.email));
-      if (primary) {
-        targetCalendar = primary;
-      }
+      // Use direct calendar URL (Google CalDAV discovery doesn't work well)
+      const calendarUrl = account.calendarId
+        ? `https://calendar.google.com/calendar/dav/${account.calendarId}/events/`
+        : `https://calendar.google.com/calendar/dav/${account.email}/events/`;
 
       const start = new Date();
       const end = new Date();
       end.setDate(end.getDate() + daysAhead);
 
       const calendarObjects = await client.fetchCalendarObjects({
-        calendar: targetCalendar,
+        calendar: { url: calendarUrl },
         timeRange: {
           start: start.toISOString(),
           end: end.toISOString(),
