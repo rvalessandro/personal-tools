@@ -15,11 +15,9 @@ tags: [contact]
 - **Email**:
 - **Phone**:
 
-## Interactions
-<!-- Link to todos/notes - this is where temporal context lives -->
-
 ## Notes
-<!-- Static notes only - current project status belongs in todos -->
+<!-- Static notes only. Current project status belongs in todos that link here.
+     Obsidian backlinks will show all related todos/notes automatically. -->
 
 <!--
 CONTACT OPTIONS:

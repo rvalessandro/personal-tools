@@ -15,8 +15,5 @@ tags: [contact]
 - **Email**:
 - **Phone**:
 
-## Interactions
-- [[20-todos/onboard-hazel-noon|Onboard Hazel to NoOn - Jan 2026]]
-
 ## Notes
 
