@@ -217,9 +217,12 @@ export class CalendarService {
         },
       });
 
+      type EventStatus = "accepted" | "declined" | "needs-action" | "tentative";
+
       interface ParsedEvent {
         date: Date;
         summary: string;
+        status: EventStatus;
       }
 
       const parsedEvents: ParsedEvent[] = [];
@@ -242,28 +245,40 @@ export class CalendarService {
           const isUTC = startMatch[2] === "Z";
 
           // Parse: 20260102T150000
-          const year = parseInt(dateStr.slice(0, 4));
-          const month = parseInt(dateStr.slice(4, 6)) - 1;
-          const day = parseInt(dateStr.slice(6, 8));
+          const evtYear = parseInt(dateStr.slice(0, 4));
+          const evtMonth = parseInt(dateStr.slice(4, 6)) - 1;
+          const evtDay = parseInt(dateStr.slice(6, 8));
           const hour = parseInt(dateStr.slice(9, 11));
           const min = parseInt(dateStr.slice(11, 13));
 
           let eventDate: Date;
           if (isUTC) {
-            eventDate = new Date(Date.UTC(year, month, day, hour, min));
+            eventDate = new Date(Date.UTC(evtYear, evtMonth, evtDay, hour, min));
           } else {
-            eventDate = new Date(year, month, day, hour, min);
+            eventDate = new Date(evtYear, evtMonth, evtDay, hour, min);
           }
 
-          parsedEvents.push({ date: eventDate, summary });
+          // Extract participation status from ATTENDEE line matching account email
+          // ATTENDEE;PARTSTAT=ACCEPTED;CN=Name:mailto:email@example.com
+          let status: EventStatus = "accepted"; // Default for events you created
+          const attendeeRegex = new RegExp(
+            `ATTENDEE[^:]*PARTSTAT=(ACCEPTED|DECLINED|NEEDS-ACTION|TENTATIVE)[^:]*:mailto:${account.email}`,
+            "i"
+          );
+          const attendeeMatch = obj.data.match(attendeeRegex);
+          if (attendeeMatch) {
+            status = attendeeMatch[1].toLowerCase().replace("-", "-") as EventStatus;
+          }
+
+          parsedEvents.push({ date: eventDate, summary, status });
         }
       }
 
       // Sort by date
       parsedEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-      // Format for display in Jakarta timezone
-      const events = parsedEvents.map((e) => {
+      // Format helper
+      const formatEvent = (e: ParsedEvent): string => {
         const dateStr = e.date.toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
@@ -277,11 +292,35 @@ export class CalendarService {
           timeZone: tz,
         });
         return `${dateStr} ${timeStr} - ${e.summary}`;
-      });
+      };
+
+      // Categorize by status
+      const accepted = parsedEvents.filter(
+        (e) => e.status === "accepted" || e.status === "tentative"
+      );
+      const needsAction = parsedEvents.filter((e) => e.status === "needs-action");
+      const declined = parsedEvents.filter((e) => e.status === "declined");
+
+      // Build output sections
+      const events: string[] = [];
+
+      if (accepted.length > 0) {
+        events.push(...accepted.map(formatEvent));
+      }
+
+      if (needsAction.length > 0) {
+        events.push("", "⏳ Needs Response:");
+        events.push(...needsAction.map((e) => `  ${formatEvent(e)}`));
+      }
+
+      if (declined.length > 0) {
+        events.push("", "❌ Declined:");
+        events.push(...declined.map((e) => `  ${formatEvent(e)}`));
+      }
 
       return {
         success: true,
-        message: `Found ${events.length} events`,
+        message: `Found ${parsedEvents.length} events`,
         events,
       };
     } catch (error) {
