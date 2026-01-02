@@ -22,7 +22,7 @@ This creates a cascade of issues:
 - Clients get vague answers or delays in responses
 - Everyone wastes time in check-ins that could be avoided
 
-We've done the knowledge transfer - you were on the calls, you have access to the docs, you've seen the examples. The knowledge is there. What's missing is applying it.
+We've done the knowledge transfer with some of the team members for admin migration, we  have access to the docs, you've seen the examples. The knowledge is there. What's missing is applying it.
 
 ## What Good Looks Like
 
