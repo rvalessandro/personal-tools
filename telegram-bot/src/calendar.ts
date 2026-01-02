@@ -190,24 +190,28 @@ export class CalendarService {
 
       // Use Jakarta timezone (UTC+7) for date calculations
       const tz = "Asia/Jakarta";
-      const jakartaOffsetMs = 7 * 60 * 60 * 1000; // UTC+7 in milliseconds
-      const now = new Date();
-      const utcMs = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
-      const jakartaMs = utcMs + jakartaOffsetMs;
 
-      // Get Jakarta date components
-      const jakartaNow = new Date(jakartaMs);
-      const year = jakartaNow.getUTCFullYear();
-      const month = jakartaNow.getUTCMonth();
-      const day = jakartaNow.getUTCDate();
+      // Get current date in Jakarta using Intl formatter
+      const jakartaFormatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      const [year, month, day] = jakartaFormatter
+        .format(new Date())
+        .split("-")
+        .map(Number);
 
-      // Start of today in Jakarta (convert back to UTC for query)
-      const startJakarta = new Date(Date.UTC(year, month, day, 0, 0, 0));
-      const start = new Date(startJakarta.getTime() - jakartaOffsetMs);
+      // Create start/end in Jakarta time, then convert to UTC for query
+      // Start: midnight Jakarta = 17:00 UTC previous day
+      const startJakarta = new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00+07:00`);
+      const endDay = new Date(startJakarta);
+      endDay.setDate(endDay.getDate() + daysAhead);
+      const endJakarta = new Date(endDay.toISOString().slice(0, 10) + "T23:59:59+07:00");
 
-      // End of range in Jakarta
-      const endJakarta = new Date(Date.UTC(year, month, day + daysAhead, 23, 59, 59));
-      const end = new Date(endJakarta.getTime() - jakartaOffsetMs);
+      const start = startJakarta;
+      const end = endJakarta;
 
       const calendarObjects = await client.fetchCalendarObjects({
         calendar: { url: calendarUrl },
@@ -223,12 +227,18 @@ export class CalendarService {
         date: Date;
         summary: string;
         status: EventStatus;
+        uid: string;
       }
 
       const parsedEvents: ParsedEvent[] = [];
+      const seenEvents = new Set<string>(); // For deduplication
 
       for (const obj of calendarObjects) {
         if (obj.data) {
+          // Extract UID for deduplication
+          const uidMatch = obj.data.match(/UID:(.+)/);
+          const uid = uidMatch ? uidMatch[1].trim() : "";
+
           // Extract SUMMARY
           const summaryMatch = obj.data.match(/SUMMARY:(.+)/);
           if (!summaryMatch) continue;
@@ -236,27 +246,50 @@ export class CalendarService {
 
           // Extract DTSTART - handle various formats
           // DTSTART:20260102T150000Z (UTC)
-          // DTSTART:20260102T150000 (local)
+          // DTSTART:20260102T150000 (local, assume Jakarta)
           // DTSTART;TZID=Asia/Jakarta:20260102T150000
-          const startMatch = obj.data.match(/DTSTART[^:]*:(\d{8}T\d{6})(Z)?/);
+          // DTSTART;VALUE=DATE:20260102 (all-day event)
+          const startMatch = obj.data.match(/DTSTART[^:]*:(\d{8})(T(\d{6}))?(Z)?/);
           if (!startMatch) continue;
 
-          const dateStr = startMatch[1];
-          const isUTC = startMatch[2] === "Z";
+          const datePart = startMatch[1]; // 20260102
+          const timePart = startMatch[3] || "000000"; // 150000 or default midnight
+          const isUTC = startMatch[4] === "Z";
 
-          // Parse: 20260102T150000
-          const evtYear = parseInt(dateStr.slice(0, 4));
-          const evtMonth = parseInt(dateStr.slice(4, 6)) - 1;
-          const evtDay = parseInt(dateStr.slice(6, 8));
-          const hour = parseInt(dateStr.slice(9, 11));
-          const min = parseInt(dateStr.slice(11, 13));
+          // Check if there's a TZID specified
+          const tzidMatch = obj.data.match(/DTSTART;[^:]*TZID=([^:;]+)/);
+          const eventTz = tzidMatch ? tzidMatch[1] : null;
+
+          // Parse date/time components
+          const evtYear = parseInt(datePart.slice(0, 4));
+          const evtMonth = parseInt(datePart.slice(4, 6));
+          const evtDay = parseInt(datePart.slice(6, 8));
+          const hour = parseInt(timePart.slice(0, 2));
+          const min = parseInt(timePart.slice(2, 4));
 
           let eventDate: Date;
           if (isUTC) {
-            eventDate = new Date(Date.UTC(evtYear, evtMonth, evtDay, hour, min));
+            eventDate = new Date(Date.UTC(evtYear, evtMonth - 1, evtDay, hour, min));
+          } else if (eventTz) {
+            // Parse with specific timezone
+            const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`;
+            // Create date assuming the timezone offset
+            if (eventTz.includes("Jakarta") || eventTz.includes("+07")) {
+              eventDate = new Date(isoStr + "+07:00");
+            } else {
+              // Fallback: treat as local Jakarta time
+              eventDate = new Date(isoStr + "+07:00");
+            }
           } else {
-            eventDate = new Date(evtYear, evtMonth, evtDay, hour, min);
+            // No timezone specified, assume Jakarta
+            const isoStr = `${evtYear}-${String(evtMonth).padStart(2, "0")}-${String(evtDay).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}:00+07:00`;
+            eventDate = new Date(isoStr);
           }
+
+          // Dedupe by UID + date
+          const dedupeKey = `${uid}-${eventDate.toISOString()}`;
+          if (seenEvents.has(dedupeKey)) continue;
+          seenEvents.add(dedupeKey);
 
           // Extract participation status from ATTENDEE line matching account email
           // ATTENDEE;PARTSTAT=ACCEPTED;CN=Name:mailto:email@example.com
@@ -267,10 +300,10 @@ export class CalendarService {
           );
           const attendeeMatch = obj.data.match(attendeeRegex);
           if (attendeeMatch) {
-            status = attendeeMatch[1].toLowerCase().replace("-", "-") as EventStatus;
+            status = attendeeMatch[1].toLowerCase() as EventStatus;
           }
 
-          parsedEvents.push({ date: eventDate, summary, status });
+          parsedEvents.push({ date: eventDate, summary, status, uid });
         }
       }
 
@@ -304,8 +337,13 @@ export class CalendarService {
       // Build output sections
       const events: string[] = [];
 
+      // Add timezone header
+      events.push(`🕐 Times shown in GMT+7 (Jakarta)\n`);
+
       if (accepted.length > 0) {
         events.push(...accepted.map(formatEvent));
+      } else if (needsAction.length === 0 && declined.length === 0) {
+        events.push("No events");
       }
 
       if (needsAction.length > 0) {
