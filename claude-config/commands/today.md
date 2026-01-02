@@ -111,6 +111,7 @@ Execute these simultaneously:
 7. `mcp__noon-linear__list_issues` with assignee: "me"
 8. Grep for todos with `estimate: 15m` or `estimate: 30m` in `knowledge-base/20-todos/`
 9. `cd calendar-sync && node scripts/get-today-events.js` (today's calendar)
+10. `cd calendar-sync && node scripts/get-emails.js --unread-only --limit=30` (unread emails)
 
 **After parallel fetches complete, organize results:**
 
@@ -133,10 +134,17 @@ Execute these simultaneously:
 - Highlight first meeting (Quick Kills deadline)
 - Calculate total meeting time vs free time
 
+**Emails (categorized automatically):**
+- **Needs Reply:** Personal emails requiring response
+- **FYI:** Informational emails, no action needed
+- **Newsletter:** Subscribed content (show count, suggest reading later)
+- **Unsubscribe:** Promotional/automated emails (suggest cleanup)
+
+Present with Gmail filter links for quick access.
+
 **Messages to Respond (Future Integration):**
 - Slack unread mentions
 - Discord DMs
-- Email inbox
 
 Estimate total time for quick kills and present as actionable list.
 
@@ -166,8 +174,12 @@ tags: [daily]
 ### Small Todos
 - [ ] [Todo] - ~15m
 
-### Messages/Emails
-- [ ] Reply to [person] on [platform]
+### Emails Needing Reply
+- [ ] [Subject](gmail-link) from [sender]
+
+### Emails to Review
+- X newsletters ([view all](filter-link))
+- X promotional to unsubscribe ([cleanup](filter-link))
 
 **Total estimated: Xm**
 

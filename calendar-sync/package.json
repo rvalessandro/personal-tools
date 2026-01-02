@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "sync": "CALENDARSYNC_ENCRYPTION_KEY=${CALENDARSYNC_ENCRYPTION_KEY} ./calendarsync --config config/systeric-to-laku6.yaml",
-    "today": "node scripts/get-today-events.js"
+    "calendar:today": "node scripts/get-today-events.js",
+    "email:categorize": "node scripts/get-emails.js",
+    "email:unread": "node scripts/get-emails.js --unread-only"
   },
   "dependencies": {
     "googleapis": "^144.0.0"
