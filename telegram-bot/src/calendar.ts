@@ -75,18 +75,27 @@ export class CalendarService {
       throw new Error(`Unknown calendar account: ${name}. Available: ${this.getAccountNames().join(", ")}`);
     }
 
-    const client = await createDAVClient({
-      serverUrl: "https://apidata.googleusercontent.com/caldav/v2/",
-      credentials: {
-        username: account.email,
-        password: account.password,
-      },
-      authMethod: "Basic",
-      defaultAccountType: "caldav",
-    });
+    console.log(`[Calendar] Connecting to CalDAV for ${account.email}...`);
 
-    this.clients.set(name, client);
-    return client;
+    try {
+      const client = await createDAVClient({
+        serverUrl: `https://apidata.googleusercontent.com/caldav/v2/${account.email}/`,
+        credentials: {
+          username: account.email,
+          password: account.password,
+        },
+        authMethod: "Basic",
+        defaultAccountType: "caldav",
+      });
+
+      console.log(`[Calendar] Connected successfully to ${name}`);
+      this.clients.set(name, client);
+      return client;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[Calendar] Connection failed for ${name}: ${message}`);
+      throw error;
+    }
   }
 
   // Create an ICS event string

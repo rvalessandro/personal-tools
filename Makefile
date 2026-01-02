@@ -41,7 +41,7 @@ bot-logs:
 	pm2 logs telegram-bot
 
 bot-restart:
-	pm2 restart telegram-bot
+	pm2 restart telegram-bot --update-env
 
 bot-deploy:
 	git pull && $(MAKE) bot-build && $(MAKE) bot-restart
