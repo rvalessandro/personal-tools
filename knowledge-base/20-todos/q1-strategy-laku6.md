@@ -9,26 +9,27 @@ category: 4
 estimate: 30m
 due: 2026-01-02
 status: pending
-tags: [laku6, strategy, q1, okrs]
+tags: [laku6, strategy, q1]
 ---
 
 # Q1 2026 Strategy for Laku6
 
 ## Description
 
-Draft Q1 strategy document for Laku6, similar to what was done for SeeDr/ReallySick team memo. Pointers are already prepared.
+Draft Q1 2026 strategy document for Laku6, similar to the SeeDr PDE Team Strategy format. Should include retrospective on 2025 wins, Q1 2026 goals, and strategic approach with key initiatives.
 
 ## Tasks
-- [ ] Draft Q1 objectives and key results
-- [ ] Define team priorities and expectations
+- [ ] Draft 2025 retrospective with key metrics/wins
+- [ ] Define Q1 2026 goal statement
+- [ ] Outline strategic approach and key initiatives
 - [ ] Structure document for clarity
 - [ ] Share with team
 
 ## Context & Resources
 
 **Reference:**
-- [[10-notes/reallysick-team-memo-agency|ReallySick Team Memo]] - Similar structure and approach
-- SeeDr team memo published to Linear: https://linear.app/see-dr-pte-ltd/document/team-memo-operating-with-agency-and-clarity-a2360e10acc2
+- SeeDr H1 2026 PDE Team Strategy: https://linear.app/see-dr-pte-ltd/document/pde-team-strategy-h1-2026-e25e9469b084
+- Format: Retrospective → Goal → Strategic Approach (with numbered initiatives)
 
 **Team context:**
 - Tech Leads: [[40-contacts/irvan|Irvan]], [[40-contacts/rangga|Rangga]]
@@ -37,5 +38,5 @@ Draft Q1 strategy document for Laku6, similar to what was done for SeeDr/ReallyS
 ## Notes
 
 - Pointers already prepared, execution should be straightforward
-- Q1 just started, important to set direction early
-- Should cover operating principles, expectations, and deliverables
+- H1 just started, important to set direction early
+- Should follow SeeDr strategy format: wins, goals, and strategic initiatives
