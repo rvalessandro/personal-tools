@@ -6,6 +6,21 @@ KB_DIR="$(dirname "$SCRIPT_DIR")"
 REPO_DIR="$(dirname "$KB_DIR")"
 CONFLICT_FILE="$KB_DIR/.sync-conflict"
 
+# Load env for Telegram notifications
+if [[ -f "$REPO_DIR/.env" ]]; then
+    source "$REPO_DIR/.env"
+fi
+
+send_telegram() {
+    local message="$1"
+    if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_NOTIFY_CHAT_ID" ]]; then
+        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="$TELEGRAM_NOTIFY_CHAT_ID" \
+            -d text="$message" \
+            -d parse_mode="Markdown" > /dev/null
+    fi
+}
+
 cd "$REPO_DIR"
 
 # Ensure correct ownership (fixes sudo git issues)
@@ -63,7 +78,18 @@ Or to keep remote version:
 EOF
 
         echo "[$(date)] CONFLICT DETECTED - see $CONFLICT_FILE"
-        # TODO: Send notification (ntfy, email, etc.)
+
+        # Send Telegram notification
+        send_telegram "⚠️ *Knowledge Base Sync Conflict*
+
+Files:
+\`\`\`
+$CONFLICTED_FILES
+\`\`\`
+
+Sync paused until resolved. Check server:
+\`cat ~/personal-tools/knowledge-base/.sync-conflict\`"
+
         exit 1
     fi
 fi
