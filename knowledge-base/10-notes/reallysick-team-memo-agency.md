@@ -22,7 +22,7 @@ This creates a cascade of issues:
 - Clients get vague answers or delays in responses
 - Everyone wastes time in check-ins that could be avoided
 
-We've done the knowledge transfer with some of the team members for admin migration, we  have access to the docs, you've seen the examples. The knowledge is there. What's missing is applying it.
+We've done the knowledge transfer with some of the team members for admin migration, we have access to the docs, we've seen the examples. The knowledge is there. What's missing is applying it.  We will start doing the same thing again for the rest of the teams so they have patterns to follow.
 
 ## What Good Looks Like
 
@@ -42,7 +42,6 @@ We've done the knowledge transfer with some of the team members for admin migrat
 
 **That's it.** No daily check-ins. Clear commitments. Proactive updates when things change.
 
-## Why This Matters
 
 **For Engineers**: Clear expectations. Less interruption. More trust.
 
