@@ -13,11 +13,11 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
 
 **Category (numbered):**
 - 0: General
-- 1: Systeric (your company)
-- 2: SeeDr (fractional CTO)
-- 3: NoOn (fractional CTO)
-- 4: Laku6 (Head of Engineering)
-- 8: Personal (family, health, social)
+- 1: Systeric
+- 2: sys: SeeDr
+- 3: sys: NoOn
+- 4: sys: Carousell/Lk6
+- 8: Personal
 
 **Time Estimate:**
 - 15m | 30m | 1h | 2h | 4h | 1d | 2d | 1w
@@ -37,7 +37,7 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
 3. **Infer and confirm**: Based on the task, INFER the following (then confirm with user):
    - **Owner**: Is this you or waiting on someone?
    - **Priority**: When does this realistically need to happen?
-   - **Category**: Which area of life? (detect from context: Laku6 = engineering team, SeeDr/NoOn = client work, etc.)
+   - **Category**: Which area of life? (detect from context: sys: clients are Systeric work)
    - **Time estimate**: How long will this take? Be realistic:
      - Quick fix, email, message → 15m
      - Small task, review, call → 30m-1h
@@ -98,17 +98,17 @@ When searching for helpful resources, prioritize:
 
 ## Example
 
-User: "I need to set up 1:1s with my new reports at Laku6"
+User: "I need to set up 1:1s with my new reports at Lk6"
 
 **Inferred:**
 - Owner: me
 - Priority: this-week (onboarding is time-sensitive)
-- Category: 4 (Laku6 - mentioned explicitly)
+- Category: 4 (sys: Carousell/Lk6)
 - Estimate: 2h (need to schedule + prep questions for each report)
 - Due: 2026-01-10 (within first week of onboarding)
 
 **Created todo:**
-- File: `knowledge-base/20-todos/setup-1on1s-laku6.md`
+- File: `knowledge-base/20-todos/setup-1on1s-lk6.md`
 - Context includes:
   - Link to Matt Mochary's 1:1 template
   - Lara Hogan's first 1:1 questions
