@@ -16,7 +16,7 @@ You are helping create a todo item in the Obsidian knowledge-base at `knowledge-
 - 1: Systeric
 - 2: sys: SeeDr
 - 3: sys: NoOn
-- 4: sys: Carousell/Lk6
+- 4: carousell/lk6
 - 8: Personal
 
 **Time Estimate:**
@@ -103,7 +103,7 @@ User: "I need to set up 1:1s with my new reports at Lk6"
 **Inferred:**
 - Owner: me
 - Priority: this-week (onboarding is time-sensitive)
-- Category: 4 (sys: Carousell/Lk6)
+- Category: 4 (carousell/lk6)
 - Estimate: 2h (need to schedule + prep questions for each report)
 - Due: 2026-01-10 (within first week of onboarding)
 
@@ -123,7 +123,7 @@ User: "waiting for legal review from Carousell on the new contract"
 - Delegated to: Carousell Legal
 - Delegated what: Contract review
 - Priority: this-week
-- Category: 4 (sys: Carousell/Lk6)
+- Category: 4 (carousell/lk6)
 - Estimate: N/A (waiting)
 
 ---
