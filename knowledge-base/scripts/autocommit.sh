@@ -13,9 +13,11 @@ fi
 
 send_telegram() {
     local message="$1"
-    if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$TELEGRAM_NOTIFY_CHAT_ID" ]]; then
+    # Use first allowed user ID for notifications
+    local chat_id="${ALLOWED_USER_IDS%%,*}"
+    if [[ -n "$TELEGRAM_BOT_TOKEN" && -n "$chat_id" ]]; then
         curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="$TELEGRAM_NOTIFY_CHAT_ID" \
+            -d chat_id="$chat_id" \
             -d text="$message" \
             -d parse_mode="Markdown" > /dev/null
     fi
