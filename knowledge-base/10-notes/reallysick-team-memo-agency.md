@@ -24,24 +24,6 @@ This creates a cascade of issues:
 
 We've done the knowledge transfer with some of the team members for admin migration, we  have access to the docs, you've seen the examples. The knowledge is there. What's missing is applying it.
 
-## What Good Looks Like
-
-**Default workflow:**
-
-1. **Engineer commits upfront**: "PR will be ready Friday, staging tested Saturday"
-2. **PM knows the timeline**: Can answer client questions immediately
-3. **Flag early**: If you sense you'll be late, say so immediately. Don't wait to be asked.
-
-**Example in practice:**
-- Monday: PM asks Engineer about feature X
-- Engineer: "I'll have the PR ready by Friday EOD. You can test on staging Saturday morning."
-- PM updates client: "Feature X will be ready for your review Saturday."
-- Friday 3pm: Engineer realizes it'll take until Saturday morning: "Hey, PR will be ready Saturday 10am instead. You can test Saturday afternoon."
-- Engineer updates PM immediately, PM updates client
-- Saturday afternoon: PM tests, provides feedback
-
-**That's it.** No daily check-ins. Clear commitments. Proactive updates when things change.
-
 ## Why This Matters
 
 **For Engineers**: Clear expectations. Less interruption. More trust.
@@ -95,16 +77,22 @@ My priority is unblocking you and enabling the team.
 
 Calendar full? Skip the calendar and just message me on WhatsApp.
 
-## Making This Stick
+## What This Looks Like in Practice
 
-Starting this week:
-- Engineers: Give timelines on every new task
-- PMs: Trust those timelines (only follow up if date is missed)
-- Everyone: Flag blockers early
+**Monday**: PM asks Engineer about feature X
+**Engineer**: "PR ready Friday EOD. Staging Saturday morning."
+**PM**: Updates client: "Feature X ready for review Saturday."
 
-Let's try this for two weeks.
+**Friday 3pm**: Engineer realizes delay: "PR will be ready Saturday 10am instead. You can test Saturday afternoon."
+**PM**: Updates client immediately.
+
+**Saturday afternoon**: PM tests, provides feedback.
+
+No daily check-ins. Clear commitments. Proactive updates when things change.
 
 ---
+
+**Starting this week**: Engineers give timelines on every task. PMs trust those timelines. Everyone flags blockers early.
 
 **Bottom line**: Clear commitments upfront. Proactive updates when things change. Less routine meetings, more focused work.
 
