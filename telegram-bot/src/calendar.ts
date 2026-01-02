@@ -233,8 +233,15 @@ export class CalendarService {
       const parsedEvents: ParsedEvent[] = [];
       const seenEvents = new Set<string>(); // For deduplication
 
+      console.log(`[Calendar] Query range: ${start.toISOString()} to ${end.toISOString()}`);
+      console.log(`[Calendar] Found ${calendarObjects.length} calendar objects`);
+
       for (const obj of calendarObjects) {
         if (obj.data) {
+          // Debug: log first event's raw data
+          if (parsedEvents.length === 0) {
+            console.log(`[Calendar] Sample raw iCal:\n${obj.data.substring(0, 500)}`);
+          }
           // Extract UID for deduplication
           const uidMatch = obj.data.match(/UID:(.+)/);
           const uid = uidMatch ? uidMatch[1].trim() : "";
@@ -303,9 +310,16 @@ export class CalendarService {
             status = attendeeMatch[1].toLowerCase() as EventStatus;
           }
 
+          // Debug: log parsed event
+          if (parsedEvents.length < 3) {
+            console.log(`[Calendar] Parsed: "${summary}" at ${eventDate.toISOString()} (status: ${status})`);
+          }
+
           parsedEvents.push({ date: eventDate, summary, status, uid });
         }
       }
+
+      console.log(`[Calendar] Total parsed events: ${parsedEvents.length}`);
 
       // Sort by date
       parsedEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
