@@ -4,7 +4,7 @@ name: {{name}}
 contact:
 company:
 role:
-context:
+met_via:
 tags: [contact]
 ---
 
@@ -15,18 +15,19 @@ tags: [contact]
 - **Email**:
 - **Phone**:
 
-## Context
-<!-- How do you know them? What's the relationship? -->
+## Interactions
+<!-- Link to todos/notes - this is where temporal context lives -->
 
 ## Notes
-
-## Interactions
-<!-- Log of key interactions, linked to todos/notes -->
+<!-- Static notes only - current project status belongs in todos -->
 
 <!--
 CONTACT OPTIONS:
   slack | discord | whatsapp | email | telegram | phone | linkedin
 
-CONTEXT (how you know them):
+MET_VIA (how you first connected - static):
   systeric | seedr | noon | laku6 | personal | church | gym
+
+IMPORTANT: Don't put "currently working on X" here - that info gets stale.
+Link to todos/notes instead, which track temporal context.
 -->
