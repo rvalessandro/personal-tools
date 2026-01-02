@@ -12,7 +12,8 @@ tags: [contact]
 
 ## Contact
 - **Primary**: discord
-- **Email**:
+- **Email**: hazel@interwise.app
+- **GitHub**: jhonhazel
 - **Phone**:
 
 ## Notes
