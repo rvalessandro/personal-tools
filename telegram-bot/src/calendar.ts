@@ -158,6 +158,7 @@ export class CalendarService {
           day: "numeric",
           hour: "numeric",
           minute: "2-digit",
+          timeZone: "Asia/Jakarta",
         });
       };
 
@@ -187,9 +188,16 @@ export class CalendarService {
         ? `https://calendar.google.com/calendar/dav/${account.calendarId}/events/`
         : `https://calendar.google.com/calendar/dav/${account.email}/events/`;
 
-      const start = new Date();
-      const end = new Date();
+      // Use Jakarta timezone for date calculations
+      const tz = "Asia/Jakarta";
+      const now = new Date();
+      const jakartaDate = new Date(now.toLocaleString("en-US", { timeZone: tz }));
+
+      const start = new Date(jakartaDate);
+      start.setHours(0, 0, 0, 0); // Start of today in Jakarta
+      const end = new Date(jakartaDate);
       end.setDate(end.getDate() + daysAhead);
+      end.setHours(23, 59, 59, 999); // End of last day in Jakarta
 
       const calendarObjects = await client.fetchCalendarObjects({
         calendar: { url: calendarUrl },
@@ -244,17 +252,19 @@ export class CalendarService {
       // Sort by date
       parsedEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-      // Format for display
+      // Format for display in Jakarta timezone
       const events = parsedEvents.map((e) => {
         const dateStr = e.date.toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
           day: "numeric",
+          timeZone: tz,
         });
         const timeStr = e.date.toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
           hour12: true,
+          timeZone: tz,
         });
         return `${dateStr} ${timeStr} - ${e.summary}`;
       });
