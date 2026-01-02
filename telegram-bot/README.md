@@ -20,6 +20,33 @@ make bot
 - `/new` - Start fresh conversation
 - `/help` - Show help
 
+### Calendar Commands
+
+- `/cal <event>` - Create calendar event (natural language)
+- `/events [account] [days]` - List upcoming events
+- `/calendars` - List configured calendar accounts
+
+Examples:
+```
+/cal Meeting with John tomorrow 3pm for 1h on work
+/cal Dentist Jan 15 2pm on personal
+/events work 7
+```
+
+### Calendar Setup
+
+1. Enable 2FA on each Google account
+2. Create App Passwords: Google Account → Security → App passwords
+3. Add to `.env`:
+
+```bash
+CALDAV_PERSONAL_EMAIL=you@gmail.com
+CALDAV_PERSONAL_PASSWORD=xxxx-xxxx-xxxx-xxxx
+
+CALDAV_WORK_EMAIL=you@company.com
+CALDAV_WORK_PASSWORD=xxxx-xxxx-xxxx-xxxx
+```
+
 ## Production (PM2)
 
 ```bash

@@ -3,6 +3,7 @@ import { resolve } from "path";
 import { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
 import { askClaude, clearSession } from "./claude.js";
+import { registerCalendarCommands } from "./commands/calendar.js";
 
 // Load .env from parent directory
 config({ path: resolve(import.meta.dirname, "../../.env") });
@@ -51,7 +52,11 @@ bot.command("help", (ctx) => {
       "- Your codebase\n" +
       "- MCP servers (Linear, SigNoz, etc.)\n" +
       "- Bash, file operations\n\n" +
-      "/new - Start fresh conversation"
+      "Commands:\n" +
+      "/new - Start fresh conversation\n" +
+      "/cal <event> - Create calendar event\n" +
+      "/events [account] [days] - List events\n" +
+      "/calendars - List calendar accounts"
   );
 });
 
@@ -62,6 +67,9 @@ bot.command("new", (ctx) => {
     ctx.reply("Session cleared. Starting fresh conversation.");
   }
 });
+
+// Register command modules
+registerCalendarCommands(bot, WORKING_DIR);
 
 // Handle all text messages
 bot.on(message("text"), (ctx) => {

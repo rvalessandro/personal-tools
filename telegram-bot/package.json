@@ -10,10 +10,13 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.16.3",
+    "tsdav": "^2.0.6",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/uuid": "^9.0.0",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
