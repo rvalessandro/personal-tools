@@ -18,6 +18,7 @@ export interface CreateEventInput {
   end: Date;
   description?: string;
   location?: string;
+  attendees?: string[]; // Email addresses of attendees
 }
 
 // Calendar service for multi-account management
@@ -101,7 +102,7 @@ export class CalendarService {
   }
 
   // Create an ICS event string
-  private createICSEvent(event: CreateEventInput, uid: string): string {
+  private createICSEvent(event: CreateEventInput, uid: string, organizerEmail: string): string {
     const formatDate = (date: Date): string => {
       return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
     };
@@ -110,13 +111,22 @@ export class CalendarService {
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//Telegram Bot//CalDAV//EN",
+      "METHOD:REQUEST",
       "BEGIN:VEVENT",
       `UID:${uid}`,
       `DTSTAMP:${formatDate(new Date())}`,
       `DTSTART:${formatDate(event.start)}`,
       `DTEND:${formatDate(event.end)}`,
       `SUMMARY:${event.title}`,
+      `ORGANIZER;CN=${organizerEmail}:mailto:${organizerEmail}`,
     ];
+
+    // Add attendees
+    if (event.attendees && event.attendees.length > 0) {
+      for (const email of event.attendees) {
+        lines.push(`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;CN=${email}:mailto:${email}`);
+      }
+    }
 
     if (event.description) {
       lines.push(`DESCRIPTION:${event.description.replace(/\n/g, "\\n")}`);
@@ -145,7 +155,7 @@ export class CalendarService {
         : `https://calendar.google.com/calendar/dav/${account.email}/events/`;
 
       const uid = uuidv4();
-      const icsContent = this.createICSEvent(event, uid);
+      const icsContent = this.createICSEvent(event, uid, account.email);
 
       await client.createCalendarObject({
         calendar: { url: calendarUrl },
@@ -164,9 +174,14 @@ export class CalendarService {
         });
       };
 
+      let message = `Created: "${event.title}" on ${formatTime(event.start)} - ${formatTime(event.end)} (${accountName})`;
+      if (event.attendees && event.attendees.length > 0) {
+        message += `\nInvites sent to: ${event.attendees.join(", ")}`;
+      }
+
       return {
         success: true,
-        message: `Created: "${event.title}" on ${formatTime(event.start)} - ${formatTime(event.end)} (${accountName})`,
+        message,
         eventId: uid,
       };
     } catch (error) {

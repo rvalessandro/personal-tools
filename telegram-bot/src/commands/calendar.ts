@@ -29,8 +29,9 @@ export function registerCalendarCommands(bot: Telegraf<Context>, workingDir: str
         "Usage: /cal <event description>\n\n" +
         "Examples:\n" +
         "• /cal Meeting with John tomorrow 3pm for 1h on work\n" +
-        "• /cal Standup 9am-9:30am on personal\n" +
-        "• /cal Dentist Jan 15 2pm for 30min on personal"
+        "• /cal Call with person@email.com Monday 12pm on systeric\n" +
+        "• /cal Standup 9am-9:30am on personal\n\n" +
+        "Include email addresses to send calendar invites automatically."
       );
       return;
     }
@@ -54,18 +55,24 @@ Available calendar accounts: ${accounts.join(", ")}
 
 Return format:
 {
-  "title": "event title",
+  "title": "event title (do NOT include email addresses in the title)",
   "startDate": "YYYY-MM-DD",
   "startTime": "HH:MM",
   "endDate": "YYYY-MM-DD",
   "endTime": "HH:MM",
   "account": "account name from available list",
   "location": "optional location",
-  "description": "optional description"
+  "description": "optional description",
+  "attendees": ["email1@example.com", "email2@example.com"]
 }
+
+IMPORTANT: Extract any email addresses mentioned in the input and add them to the "attendees" array.
+Email addresses should be removed from the title - only include the event name/description.
+Example: "call with john@example.com" → title: "call with John", attendees: ["john@example.com"]
 
 Use today's date as reference. If no account specified, use "${accounts[0]}".
 If no end time, assume 1 hour duration.
+If no attendees mentioned, use an empty array [].
 Return ONLY the JSON, nothing else.`;
 
     try {
@@ -98,6 +105,7 @@ Return ONLY the JSON, nothing else.`;
         end: endDate,
         location: parsed.location,
         description: parsed.description,
+        attendees: parsed.attendees || [],
       };
 
       const createResult = await calService.createEvent(parsed.account, eventInput);
