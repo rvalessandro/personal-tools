@@ -91,9 +91,10 @@ export async function getGitCommits(
 }
 
 /**
- * Get all commits from yesterday using GitHub API
+ * Get all commits for a specific date using GitHub API
+ * @param targetDate - The date to get commits for (defaults to yesterday Jakarta time)
  */
-export async function getAllCommitsYesterday(): Promise<Map<string, GitCommit[]>> {
+export async function getCommitsForDate(targetDate?: Date): Promise<{ date: Date; commits: Map<string, GitCommit[]> }> {
   // Use Jakarta timezone (UTC+7) for date boundaries
   const jakartaFormatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Jakarta",
@@ -102,16 +103,18 @@ export async function getAllCommitsYesterday(): Promise<Map<string, GitCommit[]>
     day: "2-digit",
   });
 
-  // Get yesterday's date in Jakarta
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
+  // Default to yesterday in Jakarta
+  const dateToUse = targetDate ?? (() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday;
+  })();
 
-  const [year, month, day] = jakartaFormatter.format(yesterday).split("-").map(Number);
+  const [year, month, day] = jakartaFormatter.format(dateToUse).split("-").map(Number);
 
-  // Yesterday 00:00:00 Jakarta = UTC-7 hours
+  // Target date 00:00:00 Jakarta
   const since = new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00+07:00`).toISOString();
-  // Yesterday 23:59:59 Jakarta
+  // Target date 23:59:59 Jakarta
   const until = new Date(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T23:59:59+07:00`).toISOString();
 
   const commitsByAuthor = new Map<string, GitCommit[]>();
@@ -149,17 +152,23 @@ export async function getAllCommitsYesterday(): Promise<Map<string, GitCommit[]>
     console.error("Error fetching commits:", error);
   }
 
-  return commitsByAuthor;
+  return { date: dateToUse, commits: commitsByAuthor };
+}
+
+/**
+ * @deprecated Use getCommitsForDate instead
+ */
+export async function getAllCommitsYesterday(): Promise<Map<string, GitCommit[]>> {
+  const result = await getCommitsForDate();
+  return result.commits;
 }
 
 /**
  * Format standup report for Telegram
  */
-export function formatStandupReport(standups: MemberStandup[]): string {
+export function formatStandupReport(standups: MemberStandup[], targetDate: Date): string {
   const lines: string[] = [];
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const dateStr = yesterday.toLocaleDateString("en-US", {
+  const dateStr = targetDate.toLocaleDateString("en-US", {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -178,7 +187,7 @@ export function formatStandupReport(standups: MemberStandup[]): string {
   );
 
   if (activeMembers.length === 0) {
-    lines.push("_No activity recorded yesterday._");
+    lines.push("_No activity recorded for this date._");
     return lines.join("\n");
   }
 
@@ -221,11 +230,55 @@ export function formatStandupReport(standups: MemberStandup[]): string {
 }
 
 /**
- * Generate full standup report
+ * Parse a date string like "yesterday", "today", "2026-01-02", "jan 2"
  */
-export async function generateStandup(): Promise<string> {
+export function parseStandupDate(input: string): Date | null {
+  const lower = input.toLowerCase().trim();
+
+  if (lower === "yesterday") {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d;
+  }
+
+  if (lower === "today") {
+    return new Date();
+  }
+
+  // Try ISO format: 2026-01-02
+  if (/^\d{4}-\d{2}-\d{2}$/.test(lower)) {
+    return new Date(`${lower}T12:00:00+07:00`);
+  }
+
+  // Try "jan 2" or "january 2" format
+  const monthMatch = lower.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(\d{1,2})$/);
+  if (monthMatch) {
+    const months: Record<string, number> = {
+      jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+      jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+    };
+    const month = months[monthMatch[1]];
+    const day = parseInt(monthMatch[2]);
+    let year = new Date().getFullYear();
+
+    // If the date would be in the future, use previous year
+    const candidate = new Date(year, month, day, 12, 0, 0);
+    if (candidate > new Date()) {
+      year--;
+    }
+    return new Date(year, month, day, 12, 0, 0);
+  }
+
+  return null;
+}
+
+/**
+ * Generate full standup report
+ * @param targetDate - The date to generate standup for (defaults to yesterday)
+ */
+export async function generateStandup(targetDate?: Date): Promise<string> {
   console.log("[Standup] Fetching commits from GitHub...");
-  const commitsByAuthor = await getAllCommitsYesterday();
+  const { date, commits: commitsByAuthor } = await getCommitsForDate(targetDate);
 
   console.log("[Standup] Building standup data...");
   const standups: MemberStandup[] = [];
@@ -243,5 +296,5 @@ export async function generateStandup(): Promise<string> {
     });
   }
 
-  return formatStandupReport(standups);
+  return formatStandupReport(standups, date);
 }

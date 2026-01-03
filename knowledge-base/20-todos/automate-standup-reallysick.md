@@ -4,11 +4,11 @@ owner: me
 delegated_to:
 delegated_what:
 delegated_when:
-priority: today
+priority: done
 category: 2
 estimate: 4h
 due: 2026-01-03
-status: pending
+status: done
 tags: [automation, reallysick, standup]
 ---
 
@@ -22,27 +22,27 @@ Build automated daily standup reports using git commits (via git-standup) and Li
 
 ## Tasks
 
-- [ ] Set up git-standup for reallysick-monorepo (1h)
-  - Install/configure github.com/kamtanahmedse/git-standup
-  - Test commit extraction for team members
-  - Handle multiple repos (start with monorepo, expand later)
+- [x] Set up git commit fetching for reallysick-monorepo
+  - Used GitHub API via `gh` CLI instead of git-standup
+  - Fetches commits for 6 team members: Alvin, Aufa, Jennifer, Hazel, Kevin, Vincent
+  - Uses Jakarta timezone for date boundaries
 
-- [ ] Pull Linear activity per team member (1.5h)
-  - Use existing Linear MCP integration
-  - Track: issues created, updated, commented, status changes
-  - Filter by team members (add list later)
-  - Query for previous day's activity
+- [ ] Pull Linear activity per team member (deferred)
+  - Can add later if needed
+  - Current implementation focuses on git commits
 
-- [ ] Generate standup report format (1h)
-  - Format: "What shipped? What's next? What's stuck?"
-  - Combine git commits + Linear activity
-  - Output per team member
-  - Daily summary format
+- [x] Generate standup report format
+  - Format shows commits per team member
+  - Lists inactive members at bottom
+  - Markdown formatting for Telegram
 
-- [ ] Automate daily run (30min)
-  - Cron job to run daily (e.g., 9 AM before standup)
-  - Option to post to Discord/Slack or just generate report
-  - Consider Telegram notification with summary
+- [x] Add Telegram bot commands
+  - `/standup` - Generate daily standup report
+  - `/team` - Show tracked team members
+
+- [ ] Automate daily run (optional)
+  - Can set up cron job later if needed
+  - Currently manual via `/standup` command
 
 - [ ] Document for team
   - Announce: stop Discord standup, use Linear/GitHub instead
