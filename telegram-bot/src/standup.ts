@@ -5,6 +5,10 @@
 
 import { execSync } from "child_process";
 
+// Linear API configuration
+const LINEAR_API_KEY = process.env.SEEDR_LINEAR_API_KEY;
+const LINEAR_API_URL = "https://api.linear.app/graphql";
+
 // Team member mapping: GitHub username → Linear email/ID
 export const TEAM_MEMBERS = [
   { github: "alvin0727", linear: "alvin.gea@interwise.app", name: "Alvin" },
@@ -24,18 +28,132 @@ export interface GitCommit {
   author: string;
 }
 
-export interface LinearActivity {
-  type: "issue_created" | "issue_updated" | "comment" | "status_change";
-  title: string;
+export interface LinearIssue {
   identifier: string;
-  description?: string;
+  title: string;
+  state: string;
+  updatedAt: string;
+}
+
+export interface LinearActivity {
+  shipped: LinearIssue[];      // Issues moved to Done
+  inProgress: LinearIssue[];   // Issues currently In Progress or In Review
 }
 
 export interface MemberStandup {
   name: string;
   github: string;
   commits: GitCommit[];
-  linearActivity: LinearActivity[];
+  linear: LinearActivity;
+}
+
+/**
+ * Query Linear GraphQL API
+ */
+async function queryLinear(query: string, variables: Record<string, unknown> = {}): Promise<unknown> {
+  if (!LINEAR_API_KEY) {
+    console.warn("[Linear] No API key configured (SEEDR_LINEAR_API_KEY)");
+    return null;
+  }
+
+  try {
+    const response = await fetch(LINEAR_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: LINEAR_API_KEY,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+      console.error(`[Linear] API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("[Linear] Query failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Get Linear issues for a user by status and date
+ */
+export async function getLinearActivity(
+  userEmail: string,
+  targetDate: Date
+): Promise<LinearActivity> {
+  const result: LinearActivity = { shipped: [], inProgress: [] };
+
+  // Format date range for the target day
+  const dateStr = targetDate.toISOString().split("T")[0];
+
+  // Query all recent issues for this assignee
+  const query = `
+    query UserIssues($email: String!) {
+      issues(
+        filter: {
+          assignee: { email: { eq: $email } }
+        }
+        first: 50
+        orderBy: updatedAt
+      ) {
+        nodes {
+          identifier
+          title
+          state { id name type }
+          completedAt
+          updatedAt
+        }
+      }
+    }
+  `;
+
+  const data = await queryLinear(query, { email: userEmail }) as {
+    issues?: {
+      nodes: Array<{
+        identifier: string;
+        title: string;
+        state: { id: string; name: string; type: string };
+        completedAt: string | null;
+        updatedAt: string;
+      }>;
+    };
+  } | null;
+
+  if (!data?.issues?.nodes) {
+    return result;
+  }
+
+  for (const issue of data.issues.nodes) {
+    // Check if completed on target date
+    if (issue.completedAt) {
+      const completedDate = issue.completedAt.split("T")[0];
+      if (completedDate === dateStr) {
+        result.shipped.push({
+          identifier: issue.identifier,
+          title: issue.title,
+          state: issue.state.name,
+          updatedAt: issue.updatedAt,
+        });
+      }
+    }
+
+    // Check if currently in progress (state type = "started")
+    if (issue.state.type === "started") {
+      result.inProgress.push({
+        identifier: issue.identifier,
+        title: issue.title,
+        state: issue.state.name,
+        updatedAt: issue.updatedAt,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -178,13 +296,12 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
   lines.push(`📊 *Daily Standup - ${dateStr}*`);
   lines.push("");
 
-  // Filter members with activity
-  const activeMembers = standups.filter(
-    (s) => s.commits.length > 0 || s.linearActivity.length > 0
-  );
-  const inactiveMembers = standups.filter(
-    (s) => s.commits.length === 0 && s.linearActivity.length === 0
-  );
+  // Check if member has any activity
+  const hasActivity = (s: MemberStandup) =>
+    s.commits.length > 0 || s.linear.shipped.length > 0 || s.linear.inProgress.length > 0;
+
+  const activeMembers = standups.filter(hasActivity);
+  const inactiveMembers = standups.filter((s) => !hasActivity(s));
 
   if (activeMembers.length === 0) {
     lines.push("_No activity recorded for this date._");
@@ -194,27 +311,46 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
   for (const member of activeMembers) {
     lines.push(`👤 *${member.name}*`);
 
-    if (member.commits.length > 0) {
-      lines.push("  📝 Commits:");
-      for (const commit of member.commits.slice(0, 5)) {
-        const msg = commit.message.length > 60
-          ? commit.message.substring(0, 57) + "..."
+    // Shipped section: commits + Linear issues completed
+    const hasShipped = member.commits.length > 0 || member.linear.shipped.length > 0;
+    if (hasShipped) {
+      lines.push("  🚀 *Shipped:*");
+
+      // Git commits
+      for (const commit of member.commits.slice(0, 3)) {
+        const msg = commit.message.length > 50
+          ? commit.message.substring(0, 47) + "..."
           : commit.message;
         lines.push(`    • \`${commit.sha}\` ${msg}`);
       }
-      if (member.commits.length > 5) {
-        lines.push(`    _...and ${member.commits.length - 5} more_`);
+      if (member.commits.length > 3) {
+        lines.push(`    _...+${member.commits.length - 3} more commits_`);
+      }
+
+      // Linear issues completed
+      for (const issue of member.linear.shipped.slice(0, 3)) {
+        const title = issue.title.length > 40
+          ? issue.title.substring(0, 37) + "..."
+          : issue.title;
+        lines.push(`    • ${issue.identifier} → Done: ${title}`);
+      }
+      if (member.linear.shipped.length > 3) {
+        lines.push(`    _...+${member.linear.shipped.length - 3} more issues_`);
       }
     }
 
-    if (member.linearActivity.length > 0) {
-      lines.push("  📋 Linear:");
-      for (const activity of member.linearActivity.slice(0, 5)) {
-        const prefix = activity.type === "issue_created" ? "+" : "→";
-        lines.push(`    ${prefix} ${activity.identifier}: ${activity.title}`);
+    // Working On section: Linear issues in progress
+    if (member.linear.inProgress.length > 0) {
+      lines.push("  🔨 *Working On:*");
+      for (const issue of member.linear.inProgress.slice(0, 3)) {
+        const title = issue.title.length > 40
+          ? issue.title.substring(0, 37) + "..."
+          : issue.title;
+        const status = issue.state === "In Review" ? " (Review)" : "";
+        lines.push(`    • ${issue.identifier}: ${title}${status}`);
       }
-      if (member.linearActivity.length > 5) {
-        lines.push(`    _...and ${member.linearActivity.length - 5} more_`);
+      if (member.linear.inProgress.length > 3) {
+        lines.push(`    _...+${member.linear.inProgress.length - 3} more_`);
       }
     }
 
@@ -280,19 +416,21 @@ export async function generateStandup(targetDate?: Date): Promise<string> {
   console.log("[Standup] Fetching commits from GitHub...");
   const { date, commits: commitsByAuthor } = await getCommitsForDate(targetDate);
 
-  console.log("[Standup] Building standup data...");
+  console.log("[Standup] Fetching Linear activity...");
   const standups: MemberStandup[] = [];
 
   for (const member of TEAM_MEMBERS) {
     const githubLower = member.github.toLowerCase();
     const commits = commitsByAuthor.get(githubLower) || [];
 
-    // Linear activity will be added via MCP in the command handler
+    // Fetch Linear activity for this team member
+    const linearActivity = await getLinearActivity(member.linear, date);
+
     standups.push({
       name: member.name,
       github: member.github,
       commits,
-      linearActivity: [], // Populated by command handler
+      linear: linearActivity,
     });
   }
 
