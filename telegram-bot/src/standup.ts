@@ -295,6 +295,7 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
   });
 
   lines.push(`📊 *Daily Standup - ${dateStr}*`);
+  lines.push("_Timezone: Asia/Jakarta (UTC+7)_");
   lines.push("");
 
   // Check if member has any activity
