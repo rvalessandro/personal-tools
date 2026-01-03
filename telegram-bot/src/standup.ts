@@ -9,6 +9,13 @@ import { execSync } from "child_process";
 const LINEAR_API_KEY = process.env.SEEDR_LINEAR_API_KEY;
 const LINEAR_API_URL = "https://api.linear.app/graphql";
 
+// Debug: log if Linear API key is configured (on module load)
+if (LINEAR_API_KEY) {
+  console.log("[Standup] Linear API key configured ✓");
+} else {
+  console.log("[Standup] Linear API key NOT configured - Linear issues will be empty");
+}
+
 // Team member mapping: GitHub username → Linear email/ID
 export const TEAM_MEMBERS = [
   { github: "alvin0727", linear: "alvin.gea@interwise.app", name: "Alvin" },
