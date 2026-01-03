@@ -372,7 +372,65 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
     lines.push(inactiveMembers.map((m) => m.name).join(", "));
   }
 
+  // Generate action recommendations
+  const recommendations = generateRecommendations(standups, targetDate);
+  if (recommendations.length > 0) {
+    lines.push("");
+    lines.push("---");
+    lines.push("💡 *Recommended Actions*");
+    for (const rec of recommendations) {
+      lines.push(`• ${rec}`);
+    }
+  }
+
   return lines.join("\n");
+}
+
+/**
+ * Generate action recommendations based on standup data
+ */
+function generateRecommendations(standups: MemberStandup[], targetDate: Date): string[] {
+  const recommendations: string[] = [];
+  const STALE_DAYS = 3; // Flag tickets not updated in 3+ days
+
+  for (const member of standups) {
+    const hasCommits = member.commits.length > 0;
+    const hasShipped = member.linear.shipped.length > 0;
+    const inProgressCount = member.linear.inProgress.length;
+
+    // Check for stale tickets (not updated in 3+ days)
+    const staleTickets = member.linear.inProgress.filter(issue => {
+      const updatedAt = new Date(issue.updatedAt);
+      const daysSinceUpdate = Math.floor((targetDate.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
+      return daysSinceUpdate >= STALE_DAYS;
+    });
+
+    // Stale tickets → likely blocked or milestone too big
+    if (staleTickets.length > 0) {
+      const ticketIds = staleTickets.map(t => t.identifier).join(", ");
+      recommendations.push(
+        `*${member.name}*: ${staleTickets.length} ticket(s) stale for ${STALE_DAYS}+ days (${ticketIds}) — check for blockers or break down the task`
+      );
+    }
+
+    // No in-progress work → may need new assignment
+    if (inProgressCount === 0 && !hasShipped) {
+      recommendations.push(`*${member.name}*: No in-progress work — assign new tickets`);
+    }
+
+    // Too many in-progress tickets → might be overloaded or context switching
+    if (inProgressCount >= 4) {
+      recommendations.push(`*${member.name}*: ${inProgressCount} tickets in progress — consider focusing on fewer items`);
+    }
+
+    // Has tickets in review → might need reviewer
+    const inReview = member.linear.inProgress.filter(i => i.state === "In Review");
+    if (inReview.length >= 2) {
+      recommendations.push(`*${member.name}*: ${inReview.length} tickets awaiting review — needs reviewer attention`);
+    }
+  }
+
+  return recommendations;
 }
 
 /**
