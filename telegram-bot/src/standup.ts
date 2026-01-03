@@ -16,6 +16,7 @@ export const TEAM_MEMBERS = [
   { github: "jenniferflorentina", linear: "jennifer.florentina@interwise.app", name: "Jennifer" },
   { github: "Jhonhazel", linear: "hazel@interwise.app", name: "Hazel" },
   { github: "K3vinTNR", linear: "kevin.taniar@interwise.app", name: "Kevin" },
+  { github: "MichaelVincentS", linear: "michael.vs@interwise.app", name: "Michael" },
   { github: "vincentbmw", linear: "vincent.benedict@interwise.app", name: "Vincent" },
 ];
 
