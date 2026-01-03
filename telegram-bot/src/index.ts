@@ -4,6 +4,7 @@ import { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
 import { askClaude, clearSession } from "./claude.js";
 import { registerCalendarCommands } from "./commands/calendar.js";
+import { registerStandupCommands } from "./commands/standup.js";
 
 // Load .env from parent directory
 config({ path: resolve(import.meta.dirname, "../../.env") });
@@ -56,7 +57,9 @@ bot.command("help", (ctx) => {
       "/new - Start fresh conversation\n" +
       "/cal <event> - Create calendar event\n" +
       "/events [account] [days] - List events\n" +
-      "/calendars - List calendar accounts"
+      "/calendars - List calendar accounts\n" +
+      "/standup - Generate daily standup report\n" +
+      "/team - Show tracked team members"
   );
 });
 
@@ -70,6 +73,7 @@ bot.command("new", (ctx) => {
 
 // Register command modules
 registerCalendarCommands(bot, WORKING_DIR);
+registerStandupCommands(bot);
 
 // Handle all text messages
 bot.on(message("text"), (ctx) => {
