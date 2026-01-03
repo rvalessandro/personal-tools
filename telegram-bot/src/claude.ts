@@ -19,6 +19,12 @@ const getClaudePath = () => process.env.CLAUDE_PATH || join(homedir(), ".local/b
 const getClaudeTimeout = () => parseInt(process.env.CLAUDE_TIMEOUT || "300000", 10);
 const getClaudeModel = () => process.env.CLAUDE_MODEL || "sonnet";
 
+// System prompt for parallelization and efficiency
+const SYSTEM_PROMPT = `When handling requests with multiple items (e.g., "create 3 calendar events", "mark 3 todos done", "check 5 PRs"):
+- Make all independent tool calls in PARALLEL (single message with multiple tool uses)
+- Don't process items sequentially when they can run concurrently
+- Group similar operations together for efficiency`;
+
 // Tool name to emoji/label mapping
 const TOOL_LABELS: Record<string, { emoji: string; label: string }> = {
   Read: { emoji: "📖", label: "Reading file" },
@@ -78,6 +84,7 @@ export async function askClaude(
     // Build args array - use stream-json for progress updates
     const args = [
       "-p", prompt,
+      "-s", SYSTEM_PROMPT,
       "--output-format", "stream-json",
       "--verbose",
       "--dangerously-skip-permissions",

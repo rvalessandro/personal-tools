@@ -161,95 +161,91 @@ tags: [daily]
 
 # [Day], [Month] [Date], [Year]
 
-## Quick Kills (30 min)
-<!-- Clear these first to unblock others -->
-
-### PRs to Review
-- [ ] [PR title](link) - [repo] - ~Xm
-
-### Unassigned PRs
-<!-- PRs needing an owner - consider picking one up -->
-- [ ] [PR title](link) - [repo]
-
-### Small Todos
-- [ ] [Todo] - ~15m
-
-### Emails Needing Reply
-- [ ] [Subject](gmail-link) from [sender]
-
-### Emails to Review
-- X newsletters ([view all](filter-link))
-- X promotional to unsubscribe ([cleanup](filter-link))
-
-**Total estimated: Xm**
+## 🧘 Habits
+<!-- Only habits that apply to today -->
+- [ ] Bible study (4AM, 1h)
+- [ ] Screen time < 45 min
+[Include if applicable: Fasting, Gym, Swimming, Tithe]
 
 ---
 
-## Today's Calendar
-<!-- Meetings and time blocks -->
+## 📅 Calendar
 
 | Time | Event | Duration | Link |
 |------|-------|----------|------|
 | 10:00 | Standup | 30m | [Meet](link) |
 
-**Free time blocks:**
-- Before first meeting: Xh for Quick Kills + deep work
-- Gap 1: X:XX - X:XX (Xh)
+**Free time:** Xh total | First meeting at X:XX
 
 ---
 
-## Today's Habits
-[Only habits that apply to today]
+## ⚡ Quick Kills (30 min)
+<!-- Clear these first to unblock others -->
 
-## Priority Todos
-[Todos with priority: today or urgent this-week items]
+| Type | Item | Est |
+|------|------|-----|
+| PR | [title](link) - repo | ~Xm |
+| Todo | [task] | ~Xm |
+| Email | [subject](link) | ~5m |
 
-## Waiting On
-[Todos where owner: not-me and follow-up needed]
+**Emails:** X newsletters, X to unsubscribe ([cleanup](filter-link))
 
-## Top 3 Focus
-1.
-2.
-3.
+**Total:** ~Xm
 
-## Notes
+---
 
-## End of Day Reflection
-<!-- Fill this out tonight -->
+## 🎯 Today's Focus
+
+### Priority Todos
+1. [ ] [Most important task]
+2. [ ] [Second priority]
+3. [ ] [Third priority]
+
+### Waiting On
+- [ ] [Person] - [topic] (since [date])
+
+---
+
+## 📝 Notes
+
+
+## 🌙 End of Day
+<!-- Fill tonight: What went well? What to improve? -->
+
 ```
 
 ### 8. Summary
 
 After creating the note, give a brief verbal summary:
+- Habits for today (what applies)
 - Calendar overview (X meetings, first at X:XX)
 - Quick Kills total time and count
 - Priority todos for today
 - Any follow-ups needed
-- Habits specific to today
 
 ## Example Output
 
 **Tuesday, January 7, 2026**
 
-"Good morning! It's Tuesday - fasting day.
+"Good morning! It's Tuesday.
 
-**Calendar (3 meetings, 2h total):**
-- First meeting at 10:00 (standup) - you have 2h for Quick Kills
-- 2pm: 1:1 with Irvan (45m)
-- 4pm: Client call (1h)
+**🧘 Today's Habits:**
+- Bible study (4AM)
+- Fasting (Tue/Wed)
+- Swimming
+- Screen time < 45 min
+
+**📅 Calendar:** 3 meetings (2h total)
+- First meeting at 10:00 — 2h for Quick Kills
 - Free block: 10:30am - 2pm for deep work
 
-**Quick Kills (25 min total):**
-- 2 PRs to review (~20 min)
-- 1 small todo: reply to Slack thread (~5 min)
+**⚡ Quick Kills:** ~25 min
+- 2 PRs to review
+- 1 small todo
 
-**After Quick Kills:**
-- 3 priority todos for deep work
-- 1 follow-up needed (waiting on Irvan since Jan 3)
+**🎯 Focus:** 3 priority todos, 1 follow-up (waiting on Irvan since Jan 3)
 
-Today's habits: Bible study ✓, Fasting, Swimming, Screen limit.
-
-Start with the Quick Kills before 10am standup. After standup, you have until 2pm for deep work."
+Start Quick Kills before 10am standup."
 
 ## Execution Mode
 

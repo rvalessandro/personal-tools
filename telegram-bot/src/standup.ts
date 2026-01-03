@@ -6,15 +6,10 @@
 import { execSync } from "child_process";
 
 // Linear API configuration
-const LINEAR_API_KEY = process.env.SEEDR_LINEAR_API_KEY;
 const LINEAR_API_URL = "https://api.linear.app/graphql";
 
-// Debug: log if Linear API key is configured (on module load)
-if (LINEAR_API_KEY) {
-  console.log("[Standup] Linear API key configured ✓");
-} else {
-  console.log("[Standup] Linear API key NOT configured - Linear issues will be empty");
-}
+// Lazy getter for API key (evaluated after dotenv loads, not at module import time)
+const getLinearApiKey = () => process.env.SEEDR_LINEAR_API_KEY;
 
 // Team member mapping: GitHub username → Linear email/ID
 export const TEAM_MEMBERS = [
@@ -59,7 +54,8 @@ export interface MemberStandup {
  * Query Linear GraphQL API
  */
 async function queryLinear(query: string, variables: Record<string, unknown> = {}): Promise<unknown> {
-  if (!LINEAR_API_KEY) {
+  const apiKey = getLinearApiKey();
+  if (!apiKey) {
     console.warn("[Linear] No API key configured (SEEDR_LINEAR_API_KEY)");
     return null;
   }
@@ -69,7 +65,7 @@ async function queryLinear(query: string, variables: Record<string, unknown> = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: LINEAR_API_KEY,
+        Authorization: apiKey,
       },
       body: JSON.stringify({ query, variables }),
     });
@@ -422,26 +418,30 @@ export function parseStandupDate(input: string): Date | null {
  * @param targetDate - The date to generate standup for (defaults to yesterday)
  */
 export async function generateStandup(targetDate?: Date): Promise<string> {
+  // Debug: log API key status (now evaluated after dotenv loaded)
+  const apiKey = getLinearApiKey();
+  console.log(`[Standup] Linear API key: ${apiKey ? "configured ✓" : "NOT configured"}`);
+
   console.log("[Standup] Fetching commits from GitHub...");
   const { date, commits: commitsByAuthor } = await getCommitsForDate(targetDate);
 
-  console.log("[Standup] Fetching Linear activity...");
-  const standups: MemberStandup[] = [];
+  console.log("[Standup] Fetching Linear activity for all members in parallel...");
 
-  for (const member of TEAM_MEMBERS) {
+  // Fetch Linear activity for ALL members in parallel
+  const linearActivities = await Promise.all(
+    TEAM_MEMBERS.map(member => getLinearActivity(member.linear, date))
+  );
+
+  // Combine commits and Linear activity
+  const standups: MemberStandup[] = TEAM_MEMBERS.map((member, index) => {
     const githubLower = member.github.toLowerCase();
-    const commits = commitsByAuthor.get(githubLower) || [];
-
-    // Fetch Linear activity for this team member
-    const linearActivity = await getLinearActivity(member.linear, date);
-
-    standups.push({
+    return {
       name: member.name,
       github: member.github,
-      commits,
-      linear: linearActivity,
-    });
-  }
+      commits: commitsByAuthor.get(githubLower) || [],
+      linear: linearActivities[index],
+    };
+  });
 
   return formatStandupReport(standups, date);
 }
