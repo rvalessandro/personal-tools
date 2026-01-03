@@ -23,6 +23,8 @@ export const TEAM_MEMBERS = [
 ];
 
 const REPO = "See-Dr-Pte-Ltd/reallysick-monorepo";
+const GITHUB_BASE = `https://github.com/${REPO}`;
+const LINEAR_BASE = "https://linear.app/seedr/issue";
 
 export interface GitCommit {
   sha: string;
@@ -321,30 +323,32 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
     if (hasShipped) {
       lines.push("  🚀 *Shipped:*");
 
-      // Git commits
+      // Git commits (with clickable links)
       for (const commit of member.commits.slice(0, 3)) {
         const msg = commit.message.length > 50
           ? commit.message.substring(0, 47) + "..."
           : commit.message;
-        lines.push(`    • \`${commit.sha}\` ${msg}`);
+        const commitUrl = `${GITHUB_BASE}/commit/${commit.sha}`;
+        lines.push(`    • [${commit.sha}](${commitUrl}) ${msg}`);
       }
       if (member.commits.length > 3) {
         lines.push(`    _...+${member.commits.length - 3} more commits_`);
       }
 
-      // Linear issues completed
+      // Linear issues completed (with clickable links)
       for (const issue of member.linear.shipped.slice(0, 3)) {
         const title = issue.title.length > 40
           ? issue.title.substring(0, 37) + "..."
           : issue.title;
-        lines.push(`    • ${issue.identifier} → Done: ${title}`);
+        const issueUrl = `${LINEAR_BASE}/${issue.identifier}`;
+        lines.push(`    • [${issue.identifier}](${issueUrl}) → Done: ${title}`);
       }
       if (member.linear.shipped.length > 3) {
         lines.push(`    _...+${member.linear.shipped.length - 3} more issues_`);
       }
     }
 
-    // Working On section: Linear issues in progress
+    // Working On section: Linear issues in progress (with clickable links)
     if (member.linear.inProgress.length > 0) {
       lines.push("  🔨 *Working On:*");
       for (const issue of member.linear.inProgress.slice(0, 3)) {
@@ -352,7 +356,8 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
           ? issue.title.substring(0, 37) + "..."
           : issue.title;
         const status = issue.state === "In Review" ? " (Review)" : "";
-        lines.push(`    • ${issue.identifier}: ${title}${status}`);
+        const issueUrl = `${LINEAR_BASE}/${issue.identifier}`;
+        lines.push(`    • [${issue.identifier}](${issueUrl}): ${title}${status}`);
       }
       if (member.linear.inProgress.length > 3) {
         lines.push(`    _...+${member.linear.inProgress.length - 3} more_`);
