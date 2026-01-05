@@ -5,12 +5,7 @@ You are helping draft a team memo following the established format used at SeeDr
 ## Memo Format
 
 ```markdown
-**To**: [Team/Audience]
-**From**: Raffi
-**Date**: [Today's date]
-**Re**: [Subject - clear and specific]
-
----
+# [Title - clear and specific]
 
 ## The Problem
 
