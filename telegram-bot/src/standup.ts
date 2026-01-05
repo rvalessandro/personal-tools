@@ -319,32 +319,40 @@ export function formatStandupReport(standups: MemberStandup[], targetDate: Date)
     lines.push(`👤 *${member.name}*`);
 
     // Shipped section: commits + Linear issues completed
+    // Show section if member has any in-progress work (to make "no commits" visible)
     const hasShipped = member.commits.length > 0 || member.linear.shipped.length > 0;
-    if (hasShipped) {
+    const hasInProgress = member.linear.inProgress.length > 0;
+
+    if (hasShipped || hasInProgress) {
       lines.push("  🚀 *Shipped:*");
 
-      // Git commits (with clickable links)
-      for (const commit of member.commits.slice(0, 3)) {
-        const msg = commit.message.length > 50
-          ? commit.message.substring(0, 47) + "..."
-          : commit.message;
-        const commitUrl = `${GITHUB_BASE}/commit/${commit.sha}`;
-        lines.push(`    • [${commit.sha}](${commitUrl}) ${msg}`);
-      }
-      if (member.commits.length > 3) {
-        lines.push(`    _...+${member.commits.length - 3} more commits_`);
-      }
+      if (member.commits.length === 0 && member.linear.shipped.length === 0) {
+        // Explicitly show no commits when member has in-progress work
+        lines.push("    _No commits_");
+      } else {
+        // Git commits (with clickable links)
+        for (const commit of member.commits.slice(0, 3)) {
+          const msg = commit.message.length > 50
+            ? commit.message.substring(0, 47) + "..."
+            : commit.message;
+          const commitUrl = `${GITHUB_BASE}/commit/${commit.sha}`;
+          lines.push(`    • [${commit.sha}](${commitUrl}) ${msg}`);
+        }
+        if (member.commits.length > 3) {
+          lines.push(`    _...+${member.commits.length - 3} more commits_`);
+        }
 
-      // Linear issues completed (with clickable links)
-      for (const issue of member.linear.shipped.slice(0, 3)) {
-        const title = issue.title.length > 40
-          ? issue.title.substring(0, 37) + "..."
-          : issue.title;
-        const issueUrl = `${LINEAR_BASE}/${issue.identifier}`;
-        lines.push(`    • [${issue.identifier}](${issueUrl}) → Done: ${title}`);
-      }
-      if (member.linear.shipped.length > 3) {
-        lines.push(`    _...+${member.linear.shipped.length - 3} more issues_`);
+        // Linear issues completed (with clickable links)
+        for (const issue of member.linear.shipped.slice(0, 3)) {
+          const title = issue.title.length > 40
+            ? issue.title.substring(0, 37) + "..."
+            : issue.title;
+          const issueUrl = `${LINEAR_BASE}/${issue.identifier}`;
+          lines.push(`    • [${issue.identifier}](${issueUrl}) → Done: ${title}`);
+        }
+        if (member.linear.shipped.length > 3) {
+          lines.push(`    _...+${member.linear.shipped.length - 3} more issues_`);
+        }
       }
     }
 
