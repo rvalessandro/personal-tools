@@ -5,7 +5,7 @@ priority: today
 category: 2
 estimate: 15m
 due: 2026-01-04
-status: pending
+status: done
 tags: [seedr, discord, communication]
 ---
 
