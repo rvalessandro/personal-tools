@@ -70,11 +70,16 @@ Project IDs:
      - Complex work → half-day
    - **Due date**: If there's an implicit deadline
 
-3. **Create via API**: Use curl to POST to Tana:
+3. **Create via API**: Use curl to POST to Tana.
+
+**REQUIRED FIELDS** - Always include these three:
+- Status (_SoE5weHHoAJ): "todo"
+- Priority (i6WS0d1KX45x): "0 - Today" | "1 - This week" | "2 - This month" | "3 - Someday"
+- Category (jMwqEMblreJO): Use project node ID from list above
 
 ```bash
 curl -s -X POST "https://europe-west1-tagr-prod.cloudfunctions.net/addToNodeV2" \
-  -H "Authorization: Bearer [TOKEN]" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmaWxlSWQiOiJVcWdlTVBHc2dnIiwiY3JlYXRlZCI6MTc2NzY4MTc5MjEwNSwidG9rZW5JZCI6IkJaV2t2cExULUlvMSJ9.zSGdI2vytclzzQjfXlr95mjCa2GsrWfjOHMAEf_etXk" \
   -H "Content-Type: application/json" \
   -d '{
     "targetNodeId": "INBOX",
@@ -85,17 +90,23 @@ curl -s -X POST "https://europe-west1-tagr-prod.cloudfunctions.net/addToNodeV2" 
         "children": [
           {"type": "field", "attributeId": "_SoE5weHHoAJ", "children": [{"name": "todo"}]},
           {"type": "field", "attributeId": "i6WS0d1KX45x", "children": [{"name": "[priority]"}]},
+          {"type": "field", "attributeId": "jMwqEMblreJO", "children": [{"id": "[PROJECT_NODE_ID]"}]},
           {"type": "field", "attributeId": "wIaLH2bO7l1a", "children": [{"name": "[estimate]"}]},
           {"name": "[Goal or context]"},
-          {"name": "[Subtask 1]"},
-          {"name": "[Subtask 2]", "children": [
-            {"name": "[Nested detail]"}
-          ]}
+          {"name": "[Subtask 1]"}
         ]
       }
     ]
   }'
 ```
+
+**Category Project IDs** (use these for the Category field):
+- General: X9uqgwygWoAe
+- Systeric: fnd-QbjyQS2A
+- SeeDr: FRe2XfyxFMSD
+- NoOn: 91mFSA58bmWc
+- Laku6: rO7GTcx7BErQ
+- Personal: NzmkGAI9Y-l3
 
 4. **Structure as subnodes**: Add task details as child nodes, not description:
    - Goal statement
@@ -110,21 +121,28 @@ curl -s -X POST "https://europe-west1-tagr-prod.cloudfunctions.net/addToNodeV2" 
 User: "I need to review the API docs for Stripe integration"
 
 **Inferred:**
+- Status: todo
 - Priority: 1 - This week
-- Category: SeeDr (if context suggests)
+- Category: SeeDr → use ID: FRe2XfyxFMSD
 - Estimate: 1h
 
-**API call creates:**
+**API call sets these fields:**
+```json
+{"type": "field", "attributeId": "_SoE5weHHoAJ", "children": [{"name": "todo"}]},
+{"type": "field", "attributeId": "i6WS0d1KX45x", "children": [{"name": "1 - This week"}]},
+{"type": "field", "attributeId": "jMwqEMblreJO", "children": [{"id": "FRe2XfyxFMSD"}]},
+{"type": "field", "attributeId": "wIaLH2bO7l1a", "children": [{"name": "1h"}]}
+```
+
+**Result in Tana:**
 ```
 Review Stripe API docs for integration
 ├── Status: todo
 ├── Priority: 1 - This week
+├── Category: SeeDr
 ├── Estimate: 1h
 ├── Goal: Understand Stripe API for payment integration
-├── Review authentication and API keys
-├── Check webhook setup requirements
-├── Document integration approach
-└── Reference: https://stripe.com/docs/api
+└── [subtasks...]
 ```
 
 ---
