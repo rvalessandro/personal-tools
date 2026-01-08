@@ -18,12 +18,12 @@ Target: INBOX
 #person: vLYHAirth0ov
 
 Fields:
-- Status: UAzZw1ckDEpa (options: todo, doing, waiting, done)
-- Priority: h5qdcTpl9oRt (options: 0 - Today, 1 - This week, 2 - This month, 3 - Someday)
-- Estimate: nR5rTSO9M8DI (options: 5m, 15m, 30m, 1h, 2h, half-day)
+- Status: _SoE5weHHoAJ (options: todo, doing, waiting, done)
+- Priority: i6WS0d1KX45x (options: 0 - Today, 1 - This week, 2 - This month, 3 - Someday)
+- Estimate: wIaLH2bO7l1a (options: 5m, 15m, 30m, 1h, 2h, half-day)
 - Due: bZnj57tjPiTp (date)
 - Done at: GAJjT45fZFWi (date)
-- Category: PaGDk-9l5yFc (reference to #project)
+- Category: jMwqEMblreJO (reference to #project)
 - Delegated to: 6AfI3k6GlOTl (reference to #person)
 - Delegated what: abzF1TvgeJpD (text)
 - Delegated when: f6LpbdWS_0Fg (date)
@@ -83,9 +83,9 @@ curl -s -X POST "https://europe-west1-tagr-prod.cloudfunctions.net/addToNodeV2" 
         "name": "[Task title]",
         "supertags": [{"id": "juAIyJUpch_A"}],
         "children": [
-          {"type": "field", "attributeId": "UAzZw1ckDEpa", "children": [{"name": "todo"}]},
-          {"type": "field", "attributeId": "h5qdcTpl9oRt", "children": [{"name": "[priority]"}]},
-          {"type": "field", "attributeId": "nR5rTSO9M8DI", "children": [{"name": "[estimate]"}]},
+          {"type": "field", "attributeId": "_SoE5weHHoAJ", "children": [{"name": "todo"}]},
+          {"type": "field", "attributeId": "i6WS0d1KX45x", "children": [{"name": "[priority]"}]},
+          {"type": "field", "attributeId": "wIaLH2bO7l1a", "children": [{"name": "[estimate]"}]},
           {"name": "[Goal or context]"},
           {"name": "[Subtask 1]"},
           {"name": "[Subtask 2]", "children": [
